@@ -370,3 +370,21 @@ export async function createAlphaVaultInstance(
 
 	return new AlphaVault(program, vaultAddress, vault, vaultMode)
 }
+
+export async function createAlphaVaultInstance(
+  connection: Connection,
+  alphaVaultProgramId: PublicKey,
+  vaultAddress: PublicKey,
+): Promise<AlphaVault> {
+  const provider = new AnchorProvider(
+    connection,
+    {} as any,
+    AnchorProvider.defaultOptions(),
+  );
+  const program = new Program(IDL, alphaVaultProgramId, provider);
+
+  const vault = await program.account.vault.fetch(vaultAddress);
+  const vaultMode = vault.vaultMode === 0 ? VaultMode.PRORATA : VaultMode.FCFS;
+
+  return new AlphaVault(program, vaultAddress, vault, vaultMode);
+}
