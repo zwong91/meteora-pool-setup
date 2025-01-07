@@ -342,6 +342,7 @@ export async function createPermissionedAlphaVaultWithAuthority(
 	)
 }
 
+// Derive alpha vault public key
 export function deriveAlphaVault(
 	base: PublicKey,
 	lbPair: PublicKey,
