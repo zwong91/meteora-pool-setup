@@ -372,6 +372,21 @@ export async function createAlphaVaultInstance(
 	return new AlphaVault(program, vaultAddress, vault, vaultMode)
 }
 
+export function deriveMerkleRootConfig(
+  alphaVault: PublicKey,
+  version: BN,
+  programId: PublicKey,
+) {
+  return PublicKey.findProgramAddressSync(
+    [
+      Buffer.from(SEED.merkleRoot),
+      alphaVault.toBuffer(),
+      new Uint8Array(version.toArrayLike(Buffer, "le", 8)),
+    ],
+    programId,
+  );
+}
+
 export async function createAlphaVaultInstance(
   connection: Connection,
   alphaVaultProgramId: PublicKey,
