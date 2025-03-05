@@ -105,6 +105,9 @@ const CONFIG_SCHEMA: JSONSchemaType<MeteoraConfig> = {
         hasAlphaVault: {
           type: "boolean",
         },
+        creatorPoolOnOffControl: {
+          type: "boolean",
+        },
       },
       required: [
         "binStep",
@@ -247,7 +250,16 @@ const CONFIG_SCHEMA: JSONSchemaType<MeteoraConfig> = {
         }
       },
       required: ["topListLength", "unstakeLockDurationSecs", "secondsToFullUnlock", "startFeeDistributeTimestamp"],
-    }
+    },
+    setDlmmPoolStatus: {
+      type: "object",
+      nullable: true,
+      properties: {
+        poolAddress: { type: "string" },
+        enabled: { type: "boolean" },
+      },
+      required: ["poolAddress", "enabled"],
+    },
   },
   required: [
     "rpcUrl",
@@ -274,6 +286,7 @@ export interface MeteoraConfig {
   lfgSeedLiquidity: LfgSeedLiquidityConfig | null;
   singleBinSeedLiquidity: SingleBinSeedLiquidityConfig | null;
   m3m3: M3m3Config | null;
+  setDlmmPoolStatus: SetDlmmPoolStatusConfig | null;
 }
 
 export interface CreateBaseMintConfig {
@@ -298,6 +311,8 @@ export interface DlmmConfig {
   activationPoint: number | null;
   priceRounding: PriceRoundingConfig;
   hasAlphaVault: boolean;
+  // Allow creator to turn on/off the pool
+  creatorPoolOnOffControl: boolean;
 }
 
 export interface FcfsAlphaVaultConfig {
@@ -375,6 +390,11 @@ export interface M3m3Config {
   unstakeLockDurationSecs: number;
   secondsToFullUnlock: number;
   startFeeDistributeTimestamp: number;
+}
+
+export interface SetDlmmPoolStatusConfig {
+  poolAddress: string;
+  enabled: boolean;
 }
 
 export enum ActivationTypeConfig {

@@ -47,6 +47,7 @@ Also we need to provide the keypair for the payer wallet in `keypair.json` file.
 - `activationPoint`: To activate pool trading at a point, either slot valut or timestamp value base on `activationType`.
 - `priceRounding`: Should be `up` or `down`.
 - `hasAlphaVault`: Whether alpha vault is enabled or not for this pool.
+- `creatorPoolOnOffControl`: Allow creator to turn on/off pool control.
 
 **NOTICE**: There is only one DLMM pool that can be created with the same base and quote tokens, using the instruction `initializeCustomizablePermissionlessLbPair`. So if users are using that instruction to create a new DLMM pool with the same base and quote tokens, but with different parameters, then the transaction will be failed.
 
@@ -163,6 +164,11 @@ bun run src/lock_liquidity_for_m3m3.ts --config ./config/create_m3m3_farm.json
 Create the M3M3 fee farm
 ```bash
 bun run src/create_m3m3_farm.ts --config ./config/create_m3m3_farm.json
+```
+
+** Set DLMM pool status**
+```bash
+bun run src/set_dlmm_pool_status.ts --config ./config/set_dlmm_pool_status.json
 ```
 
 ## After deployment
