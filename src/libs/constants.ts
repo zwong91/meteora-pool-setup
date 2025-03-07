@@ -1,8 +1,17 @@
+import { PublicKey } from "@solana/web3.js";
+
 export const DEFAULT_COMMITMENT_LEVEL = "confirmed";
-export const SOL_TOKEN_MINT = "So11111111111111111111111111111111111111112";
-export const USDC_TOKEN_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+export const SOL_TOKEN_MINT = new PublicKey(
+  "So11111111111111111111111111111111111111112",
+);
+export const USDC_TOKEN_MINT = new PublicKey(
+  "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+);
 export const SOL_TOKEN_DECIMALS = 9;
 export const USDC_TOKEN_DECIMALS = 6;
+
+export const TX_SIZE_LIMIT_BYTES = 1232;
+export const MAX_INSTRUCTIONS_PER_STAKE_ESCROW_ACCOUNTS_CREATED = 8;
 
 export const DLMM_PROGRAM_IDS = {
   devnet: "LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo",
@@ -21,8 +30,6 @@ export const ALPHA_VAULT_PROGRAM_IDS = {
   localhost: "SNPmGgnywBvvrAKMLundzG6StojyHTHDLu7T4sdhP4k",
   "mainnet-beta": "vaU6kP7iNEGkbmPkLmZfGwiGxd4Mob24QQCie5R9kd2",
 };
-
-export const MAX_INSTRUCTIONS_PER_STAKE_ESCROW_ACCOUNTS_CREATED = 8;
 
 export const M3M3_PROGRAM_IDS = {
   "mainnet-beta": "FEESngU3neckdwib9X3KWqdL7Mjmqk9XNp3uh5JbP4KP",
