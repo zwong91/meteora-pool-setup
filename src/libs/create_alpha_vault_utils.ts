@@ -259,39 +259,6 @@ export async function createPermissionedAlphaVaultWithAuthority(
     throw new Error(`Invalid whitelist mode ${params.whitelistMode}. Only Permissioned with authority is allowed 
     `);
   }
-
-  // 1. Create alpha vault
-  if (alphaVaultType == AlphaVaultTypeConfig.Fcfs) {
-    await createFcfsAlphaVault(
-      connection,
-      wallet,
-      poolType,
-      poolAddress,
-      baseMint,
-      quoteMint,
-      quoteDecimals,
-      params as FcfsAlphaVaultConfig,
-      dryRun,
-      computeUnitPriceMicroLamports,
-      opts,
-    );
-  } else if (alphaVaultType == AlphaVaultTypeConfig.Prorata) {
-    await createProrataAlphaVault(
-      connection,
-      wallet,
-      poolType,
-      poolAddress,
-      baseMint,
-      quoteMint,
-      quoteDecimals,
-      params as ProrataAlphaVaultConfig,
-      dryRun,
-      computeUnitPriceMicroLamports,
-      opts,
-    );
-  }
-
-  // 2. Create StakeEscrow account for each whitelisted wallet
   const alphaVaultProgramId = new PublicKey(
     opts?.alphaVaultProgramId ?? ALPHA_VAULT_PROGRAM_IDS["mainnet-beta"],
   );
@@ -302,6 +269,43 @@ export async function createPermissionedAlphaVaultWithAuthority(
     alphaVaultProgramId,
   );
 
+  const alphaVaultAccountInfo = await connection.getAccountInfo(alphaVaultPubkey);
+  if (!alphaVaultAccountInfo) {
+    // 1. Create alpha vault
+    if (alphaVaultType == AlphaVaultTypeConfig.Fcfs) {
+      await createFcfsAlphaVault(
+        connection,
+        wallet,
+        poolType,
+        poolAddress,
+        baseMint,
+        quoteMint,
+        quoteDecimals,
+        params as FcfsAlphaVaultConfig,
+        dryRun,
+        computeUnitPriceMicroLamports,
+        opts,
+      );
+    } else if (alphaVaultType == AlphaVaultTypeConfig.Prorata) {
+      await createProrataAlphaVault(
+        connection,
+        wallet,
+        poolType,
+        poolAddress,
+        baseMint,
+        quoteMint,
+        quoteDecimals,
+        params as ProrataAlphaVaultConfig,
+        dryRun,
+        computeUnitPriceMicroLamports,
+        opts,
+      );
+    }
+  } else {
+    console.log(`> Alpha vault already exists at ${alphaVaultPubkey}`);
+  }
+
+  // 2. Create StakeEscrow account for each whitelisted wallet
   console.log("Creating stake escrow accounts...");
 
   const alphaVault = await createAlphaVaultInstance(
