@@ -182,8 +182,9 @@ describe("Test config directory", () => {
       try {
         validateConfig(config);
       } catch (error) {
-        console.error(`Config file ${filePath} is invalid`);
-        throw new Error(error);
+        console.error(`Config file ${filePath} is invalid:`, error);
+        expect(error).toBeUndefined();
+        fail(`Config file ${filePath} is invalid: ${error}`);
       }
     });
   });
@@ -200,8 +201,8 @@ function parseFilesFromDirectory(
     files.forEach((file) => {
       const filePath = path.join(directory, file);
 
-      // Check if the filePath is a file
-      if (fs.statSync(filePath).isFile()) {
+      // Check if the filePath is a file and ends with .json
+      if (fs.statSync(filePath).isFile() && file.endsWith('.json')) {
         // Read the file content
         const content = fs.readFileSync(filePath, "utf-8");
 

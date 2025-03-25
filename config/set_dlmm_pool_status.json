@@ -4,7 +4,7 @@
   "keypairFilePath": "keypair.json",
   "computeUnitPriceMicroLamports": 100000,
   "setDlmmPoolStatus": {
-    "poolMint": "9d9mb8kooFfaD3SctgZtkxQypkshx6ezhbKio89ixyy2",
+    "poolAddress": "9d9mb8kooFfaD3SctgZtkxQypkshx6ezhbKio89ixyy2",
     "enabled": true
   }
 }
