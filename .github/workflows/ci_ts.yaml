@@ -27,7 +27,7 @@ jobs:
       - name: Verify Changed files
         id: verify-changed-files
         run: |
-          CHANGED_FILES=$(git diff --name-only src/**)
+          CHANGED_FILES=$(git diff --name-only HEAD^ HEAD -- "src/")
           if [ -n "$CHANGED_FILES" ]; then
             {
               echo "files_changed=true"
