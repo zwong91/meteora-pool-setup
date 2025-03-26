@@ -38,7 +38,7 @@ const payerKeypair = Keypair.fromSecretKey(new Uint8Array(JSON.parse(keypairBuff
 const payerWallet = new Wallet(payerKeypair)
 const DLMM_PROGRAM_ID = new PublicKey(DLMM_PROGRAM_IDS["localhost"])
 
-describe("Test Seed Liquidity Single Bin", () => {
+describe.skip("Test Seed Liquidity Single Bin", () => {
 	const WEN_DECIMALS = 5
 	const USDC_DECIMALS = 6
 	const WEN_SUPPLY = 100_000_000

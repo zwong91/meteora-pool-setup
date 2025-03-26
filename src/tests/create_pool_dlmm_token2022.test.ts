@@ -1,12 +1,8 @@
 import { Connection, Keypair, PublicKey } from "@solana/web3.js"
 import fs from "fs"
-import { DLMM_PROGRAM_IDS, DYNAMIC_AMM_PROGRAM_IDS } from "../libs/constants"
-import {
-	createPermissionlessDlmmPool,
-	createPermissionlessDynamicPool,
-	seedLiquiditySingleBin
-} from "../index"
-import { BN, Wallet, web3 } from "@coral-xyz/anchor"
+import { DLMM_PROGRAM_IDS } from "../libs/constants"
+import { createPermissionlessDlmmPool } from "../index"
+import { Wallet, web3 } from "@coral-xyz/anchor"
 import {
 	ActivationTypeConfig,
 	MeteoraConfig,
@@ -14,15 +10,11 @@ import {
 } from "../libs/config"
 import {
 	ASSOCIATED_TOKEN_PROGRAM_ID,
-	TOKEN_PROGRAM_ID,
+	TOKEN_2022_PROGRAM_ID,
 	createMint,
 	getOrCreateAssociatedTokenAccount,
 	mintTo
 } from "@solana/spl-token"
-import {
-	deriveCustomizablePermissionlessLbPair,
-	getTokenBalance
-} from "@meteora-ag/dlmm"
 
 const keypairFilePath =
 	"./src/tests/keys/localnet/admin-bossj3JvwiNK7pvjr149DqdtJxf2gdygbcmEPTkb2F1.json"
@@ -33,23 +25,20 @@ const payerKeypair = Keypair.fromSecretKey(new Uint8Array(JSON.parse(keypairBuff
 const payerWallet = new Wallet(payerKeypair)
 const DLMM_PROGRAM_ID = new PublicKey(DLMM_PROGRAM_IDS["localhost"])
 
-describe.skip("Test Seed Liquidity Single Bin", () => {
+describe("Test Create Dlmm Pool with token2022", () => {
 	const WEN_DECIMALS = 5
 	const USDC_DECIMALS = 6
+	const JUP_DECIMALS = 6
 	const WEN_SUPPLY = 100_000_000
 	const USDC_SUPPLY = 100_000_000
-	const binStep = 200
-	const feeBps = 200
-	const initialPrice = 0.005
-	const baseKeypair = Keypair.generate()
-	const positionOwner = Keypair.generate().publicKey
-	const feeOwner = Keypair.generate().publicKey
+	const JUP_SUPPLY = 7_000_000_000
 
 	let WEN: PublicKey
 	let USDC: PublicKey
+	let JUP: PublicKey
 	let userWEN: web3.PublicKey
 	let userUSDC: web3.PublicKey
-	let poolKey: PublicKey
+	let userJUP: web3.PublicKey
 
 	beforeAll(async () => {
 		WEN = await createMint(
@@ -60,7 +49,7 @@ describe.skip("Test Seed Liquidity Single Bin", () => {
 			WEN_DECIMALS,
 			Keypair.generate(),
 			undefined,
-			TOKEN_PROGRAM_ID
+			TOKEN_2022_PROGRAM_ID
 		)
 
 		USDC = await createMint(
@@ -71,7 +60,18 @@ describe.skip("Test Seed Liquidity Single Bin", () => {
 			USDC_DECIMALS,
 			Keypair.generate(),
 			undefined,
-			TOKEN_PROGRAM_ID
+			TOKEN_2022_PROGRAM_ID
+		)
+
+		JUP = await createMint(
+			connection,
+			payerKeypair,
+			payerKeypair.publicKey,
+			null,
+			JUP_DECIMALS,
+			Keypair.generate(),
+			undefined,
+			TOKEN_2022_PROGRAM_ID
 		)
 
 		const userWenInfo = await getOrCreateAssociatedTokenAccount(
@@ -84,7 +84,7 @@ describe.skip("Test Seed Liquidity Single Bin", () => {
 			{
 				commitment: "confirmed"
 			},
-			TOKEN_PROGRAM_ID,
+			TOKEN_2022_PROGRAM_ID,
 			ASSOCIATED_TOKEN_PROGRAM_ID
 		)
 		userWEN = userWenInfo.address
@@ -99,10 +99,25 @@ describe.skip("Test Seed Liquidity Single Bin", () => {
 			{
 				commitment: "confirmed"
 			},
-			TOKEN_PROGRAM_ID,
+			TOKEN_2022_PROGRAM_ID,
 			ASSOCIATED_TOKEN_PROGRAM_ID
 		)
 		userUSDC = userUsdcInfo.address
+
+		const userJupInfo = await getOrCreateAssociatedTokenAccount(
+			connection,
+			payerKeypair,
+			JUP,
+			payerKeypair.publicKey,
+			false,
+			"confirmed",
+			{
+				commitment: "confirmed"
+			},
+			TOKEN_2022_PROGRAM_ID,
+			ASSOCIATED_TOKEN_PROGRAM_ID
+		)
+		userJUP = userJupInfo.address
 
 		await mintTo(
 			connection,
@@ -115,7 +130,7 @@ describe.skip("Test Seed Liquidity Single Bin", () => {
 			{
 				commitment: "confirmed"
 			},
-			TOKEN_PROGRAM_ID
+			TOKEN_2022_PROGRAM_ID
 		)
 
 		await mintTo(
@@ -129,12 +144,25 @@ describe.skip("Test Seed Liquidity Single Bin", () => {
 			{
 				commitment: "confirmed"
 			},
-			TOKEN_PROGRAM_ID
+			TOKEN_2022_PROGRAM_ID
 		)
 
-		const slot = await connection.getSlot()
-		const activationPoint = new BN(slot).add(new BN(100))
+		await mintTo(
+			connection,
+			payerKeypair,
+			JUP,
+			userJUP,
+			payerKeypair.publicKey,
+			JUP_SUPPLY * 10 ** JUP_DECIMALS,
+			[],
+			{
+				commitment: "confirmed"
+			},
+			TOKEN_2022_PROGRAM_ID
+		)
+	})
 
+	it("Should be able to create Basic DLMM pool", async () => {
 		const config: MeteoraConfig = {
 			dryRun: false,
 			rpcUrl,
@@ -144,66 +172,59 @@ describe.skip("Test Seed Liquidity Single Bin", () => {
 			baseMint: WEN.toString(),
 			quoteSymbol: "USDC",
 			dlmm: {
-				binStep,
-				feeBps,
-				initialPrice,
-				activationType: ActivationTypeConfig.Slot,
-				activationPoint,
+				binStep: 200,
+				feeBps: 200,
+				initialPrice: 0.5,
+				activationType: ActivationTypeConfig.Timestamp,
+				activationPoint: null,
 				priceRounding: PriceRoundingConfig.Up,
-				hasAlphaVault: false
+				hasAlphaVault: false,
+				creatorPoolOnOffControl: false
 			},
 			dynamicAmm: null,
 			alphaVault: null,
 			lockLiquidity: null,
 			lfgSeedLiquidity: null,
-			singleBinSeedLiquidity: null
+			singleBinSeedLiquidity: null,
+			m3m3: null,
+			setDlmmPoolStatus: null
 		}
-
-		//create DLMM pool
 		await createPermissionlessDlmmPool(config, connection, payerWallet, WEN, USDC, {
 			cluster: "localhost",
 			programId: DLMM_PROGRAM_ID
 		})
-
-		// send SOL to wallets
-		const payerBalance = await connection.getBalance(payerKeypair.publicKey)
-		console.log(`Payer balance ${payerBalance} lamports`)
-
-		const [poolKeyString] = deriveCustomizablePermissionlessLbPair(
-			WEN,
-			USDC,
-			new PublicKey(DLMM_PROGRAM_ID)
-		)
-		poolKey = new PublicKey(poolKeyString)
 	})
 
-	it("Should able to seed liquidity single bin", async () => {
-		const seedAmount = new BN(1000 * 10 ** WEN_DECIMALS)
-		const priceRounding = "up"
-		const lockReleasePoint = new BN(0)
-		const seedTokenXToPositionOwner = true
-		const dryRun = false
-		const computeUnitPriceMicroLamports = 100000
-
-		await seedLiquiditySingleBin(
-			connection,
-			payerKeypair,
-			baseKeypair,
-			payerKeypair,
-			positionOwner,
-			feeOwner,
-			WEN,
-			USDC,
-			seedAmount,
-			initialPrice,
-			priceRounding,
-			lockReleasePoint,
-			seedTokenXToPositionOwner,
-			dryRun,
-			computeUnitPriceMicroLamports,
-			{
-				cluster: "localhost"
-			}
-		)
+	it("Should be able to create DLMM pool without strict quote token", async () => {
+		const config: MeteoraConfig = {
+			dryRun: false,
+			rpcUrl,
+			keypairFilePath,
+			computeUnitPriceMicroLamports: 100000,
+			createBaseToken: null,
+			baseMint: WEN.toString(),
+			quoteMint: JUP.toString(),
+			dlmm: {
+				binStep: 200,
+				feeBps: 200,
+				initialPrice: 0.5,
+				activationType: ActivationTypeConfig.Timestamp,
+				activationPoint: null,
+				priceRounding: PriceRoundingConfig.Up,
+				hasAlphaVault: false,
+				creatorPoolOnOffControl: false
+			},
+			dynamicAmm: null,
+			alphaVault: null,
+			lockLiquidity: null,
+			lfgSeedLiquidity: null,
+			singleBinSeedLiquidity: null,
+			m3m3: null,
+			setDlmmPoolStatus: null
+		}
+		await createPermissionlessDlmmPool(config, connection, payerWallet, WEN, JUP, {
+			cluster: "localhost",
+			programId: DLMM_PROGRAM_ID
+		})
 	})
 })
