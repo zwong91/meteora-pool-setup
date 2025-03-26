@@ -31,6 +31,7 @@ import {
 	WhitelistMode
 } from "@meteora-ag/alpha-vault"
 import {
+<<<<<<< HEAD
 	ActivationTypeConfig,
 	MeteoraConfig,
 	PoolTypeConfig,
@@ -39,6 +40,16 @@ import {
 } from ".."
 import { getMint } from "@solana/spl-token"
 import { parse } from "csv-parse"
+=======
+  ActivationTypeConfig,
+  MeteoraConfig,
+  PoolTypeConfig,
+  PriceRoundingConfig,
+  WhitelistModeConfig,
+} from "..";
+import { getMint, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
+import { parse } from "csv-parse";
+>>>>>>> 240bc2b (create dlmm pool support token 2022)
 
 export const DEFAULT_ADD_LIQUIDITY_CU = 800_000
 
@@ -50,6 +61,7 @@ export function extraConfigValidation(config: MeteoraConfig) {
 		throw new Error("Missing rpcUrl in config file.")
 	}
 
+<<<<<<< HEAD
 	if (config.createBaseToken && config.baseMint) {
 		throw new Error(
 			"Both createBaseToken and baseMint cannot be set simultaneously."
@@ -87,6 +99,47 @@ export function extraConfigValidation(config: MeteoraConfig) {
 			)
 		}
 	}
+=======
+  if (config.createBaseToken && config.baseMint) {
+    throw new Error(
+      "Both createBaseToken and baseMint cannot be set simultaneously."
+    );
+  }
+
+  if (config.dynamicAmm && config.dlmm) {
+    throw new Error(
+      "Both Dynamic AMM and DLMM configuration cannot be set simultaneously."
+    );
+  }
+
+  if (config.dlmm && config.dlmm.hasAlphaVault) {
+    if (config.quoteSymbol == null && config.quoteMint == null) {
+      throw new Error(
+        "Either quoteSymbol or quoteMint must be provided for DLMM"
+      );
+    }
+  }
+
+  if (config.alphaVault) {
+    if (
+      config.alphaVault.alphaVaultType != "fcfs" &&
+      config.alphaVault.alphaVaultType != "prorata"
+    ) {
+      throw new Error(
+        `Alpha vault type ${config.alphaVault.alphaVaultType} isn't supported.`
+      );
+    }
+
+    if (
+      config.alphaVault.poolType != "dynamic" &&
+      config.alphaVault.poolType != "dlmm"
+    ) {
+      throw new Error(
+        `Alpha vault pool tyep ${config.alphaVault.poolType} isn't supported.`
+      );
+    }
+  }
+>>>>>>> 240bc2b (create dlmm pool support token 2022)
 }
 
 export function safeParseJsonFromFile<T>(filePath: string): T {
@@ -164,32 +217,40 @@ export function getQuoteMint(quoteSymbol?: string, quoteMint?: string): PublicKe
 }
 
 export async function getQuoteDecimals(
-	connection: Connection,
-	quoteSymbol?: string,
-	quoteMint?: string
+  connection: Connection,
+  quoteSymbol?: string,
+  quoteMint?: string
 ): Promise<number> {
-	if (quoteSymbol == null && quoteMint == null) {
-		throw new Error(`Either quoteSymbol or quoteMint must be provided`)
-	}
-	if (quoteMint) {
-		const mintAccount = await getMint(connection, new PublicKey(quoteMint))
-		const decimals = mintAccount.decimals
-		return decimals
-	}
-	if (quoteSymbol.toLowerCase() == "sol") {
-		return SOL_TOKEN_DECIMALS
-	} else if (quoteSymbol.toLowerCase() == "usdc") {
-		return USDC_TOKEN_DECIMALS
-	} else {
-		throw new Error(`Unsupported quote symbol: ${quoteSymbol}`)
-	}
+  if (quoteSymbol == null && quoteMint == null) {
+    throw new Error(`Either quoteSymbol or quoteMint must be provided`);
+  }
+  if (quoteMint) {
+    const quoteMintInfo = await connection.getAccountInfo(
+      new PublicKey(quoteMint)
+    );
+    const mintAccount = await getMint(
+      connection,
+      new PublicKey(quoteMint),
+      "confirmed",
+      quoteMintInfo.owner
+    );
+    const decimals = mintAccount.decimals;
+    return decimals;
+  }
+  if (quoteSymbol.toLowerCase() == "sol") {
+    return SOL_TOKEN_DECIMALS;
+  } else if (quoteSymbol.toLowerCase() == "usdc") {
+    return USDC_TOKEN_DECIMALS;
+  } else {
+    throw new Error(`Unsupported quote symbol: ${quoteSymbol}`);
+  }
 }
 
 export async function runSimulateTransaction(
-	connection: Connection,
-	signers: Array<Keypair>,
-	feePayer: PublicKey,
-	txs: Array<Transaction>
+  connection: Connection,
+  signers: Array<Keypair>,
+  feePayer: PublicKey,
+  txs: Array<Transaction>
 ) {
 	const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash()
 
@@ -199,30 +260,36 @@ export async function runSimulateTransaction(
 		feePayer
 	}).add(...txs)
 
-	let simulateResp = await simulateTransaction(connection, transaction, signers)
-	if (simulateResp.value.err) {
-		console.error(">>> Simulate transaction failed:", simulateResp.value.err)
-		console.log(`Logs ${simulateResp.value.logs}`)
-		throw simulateResp.value.err
-	}
+  let simulateResp = await simulateTransaction(
+    connection,
+    transaction,
+    signers
+  );
+  if (simulateResp.value.err) {
+    console.error(">>> Simulate transaction failed:", simulateResp.value.err);
+    console.log(`Logs ${simulateResp.value.logs}`);
+    throw simulateResp.value.err;
+  }
 
 	console.log(">>> Simulated transaction successfully")
 }
 
 export function getDynamicAmmActivationType(
-	activationType: ActivationTypeConfig
+  activationType: ActivationTypeConfig
 ): DynamicAmmActivationType {
-	if (activationType == ActivationTypeConfig.Slot) {
-		return DynamicAmmActivationType.Slot
-	} else if (activationType == ActivationTypeConfig.Timestamp) {
-		return DynamicAmmActivationType.Timestamp
-	} else {
-		throw new Error(`Unsupported Dynamic AMM activation type: ${activationType}`)
-	}
+  if (activationType == ActivationTypeConfig.Slot) {
+    return DynamicAmmActivationType.Slot;
+  } else if (activationType == ActivationTypeConfig.Timestamp) {
+    return DynamicAmmActivationType.Timestamp;
+  } else {
+    throw new Error(
+      `Unsupported Dynamic AMM activation type: ${activationType}`
+    );
+  }
 }
 
 export function getDlmmActivationType(
-	activationType: ActivationTypeConfig
+  activationType: ActivationTypeConfig
 ): DlmmActivationType {
 	if (activationType == ActivationTypeConfig.Slot) {
 		return DlmmActivationType.Slot
@@ -234,7 +301,7 @@ export function getDlmmActivationType(
 }
 
 export function isPriceRoundingUp(
-	priceRoundingConfig: PriceRoundingConfig
+  priceRoundingConfig: PriceRoundingConfig
 ): boolean {
 	return priceRoundingConfig == PriceRoundingConfig.Up
 }
@@ -250,7 +317,7 @@ export function getAlphaVaultPoolType(poolType: PoolTypeConfig): PoolType {
 }
 
 export function getAlphaVaultWhitelistMode(
-	mode: WhitelistModeConfig
+  mode: WhitelistModeConfig
 ): WhitelistMode {
 	if (mode == WhitelistModeConfig.Permissionless) {
 		return Permissionless
@@ -276,13 +343,13 @@ export function toAlphaVaulSdkPoolType(poolType: PoolTypeConfig): PoolType {
 
 /// Divine the instructions to multiple transactions
 export async function handleSendTxs(
-	connection: Connection,
-	instructions: TransactionInstruction[],
-	instructionsPerTx: number,
-	payer: Keypair,
-	computeUnitPriceMicroLamports: number,
-	dryRun: boolean,
-	txLabel?: string
+  connection: Connection,
+  instructions: TransactionInstruction[],
+  instructionsPerTx: number,
+  payer: Keypair,
+  computeUnitPriceMicroLamports: number,
+  dryRun: boolean,
+  txLabel?: string
 ): Promise<void> {
 	const numTransactions = Math.ceil(instructions.length / instructionsPerTx)
 
@@ -308,23 +375,23 @@ export async function handleSendTxs(
 		}).length
 		console.log(`Tx number ${i + 1} txSize = ${txSize}`)
 
-		let label = txLabel ?? ""
-		if (dryRun) {
-			console.log(`\n> Simulating ${label} tx number ${i + 1}...`)
-			await runSimulateTransaction(connection, [payer], payer.publicKey, [tx])
-		} else {
-			console.log(`>> Sending ${label} transaction number ${i + 1}...`)
-			const txHash = await sendAndConfirmTransaction(connection, tx, [payer]).catch(
-				(err) => {
-					console.error(err)
-					throw err
-				}
-			)
-			console.log(
-				`>>> Transaction ${i + 1} ${label} successfully with tx hash: ${txHash}`
-			)
-		}
-	}
+    let label = txLabel ?? "";
+    if (dryRun) {
+      console.log(`\n> Simulating ${label} tx number ${i + 1}...`);
+      await runSimulateTransaction(connection, [payer], payer.publicKey, [tx]);
+    } else {
+      console.log(`>> Sending ${label} transaction number ${i + 1}...`);
+      const txHash = await sendAndConfirmTransaction(connection, tx, [
+        payer,
+      ]).catch((err) => {
+        console.error(err);
+        throw err;
+      });
+      console.log(
+        `>>> Transaction ${i + 1} ${label} successfully with tx hash: ${txHash}`
+      );
+    }
+  }
 }
 
 /**
@@ -334,46 +401,46 @@ export async function handleSendTxs(
  * @returns {boolean} true if priority fee was modified
  **/
 export const modifyComputeUnitPriceIx = (
-	tx: VersionedTransaction | Transaction,
-	newPriorityFee: number
+  tx: VersionedTransaction | Transaction,
+  newPriorityFee: number
 ): boolean => {
-	if ("version" in tx) {
-		for (let ix of tx.message.compiledInstructions) {
-			let programId = tx.message.staticAccountKeys[ix.programIdIndex]
-			if (programId && ComputeBudgetProgram.programId.equals(programId)) {
-				// need check for data index
-				if (ix.data[0] === 3) {
-					ix.data = Uint8Array.from(
-						ComputeBudgetProgram.setComputeUnitPrice({
-							microLamports: newPriorityFee
-						}).data
-					)
-					return true
-				}
-			}
-		}
-		// could not inject for VT
-	} else {
-		for (let ix of tx.instructions) {
-			if (ComputeBudgetProgram.programId.equals(ix.programId)) {
-				// need check for data index
-				if (ix.data[0] === 3) {
-					ix.data = ComputeBudgetProgram.setComputeUnitPrice({
-						microLamports: newPriorityFee
-					}).data
-					return true
-				}
-			}
-		}
+  if ("version" in tx) {
+    for (let ix of tx.message.compiledInstructions) {
+      let programId = tx.message.staticAccountKeys[ix.programIdIndex];
+      if (programId && ComputeBudgetProgram.programId.equals(programId)) {
+        // need check for data index
+        if (ix.data[0] === 3) {
+          ix.data = Uint8Array.from(
+            ComputeBudgetProgram.setComputeUnitPrice({
+              microLamports: newPriorityFee,
+            }).data
+          );
+          return true;
+        }
+      }
+    }
+    // could not inject for VT
+  } else {
+    for (let ix of tx.instructions) {
+      if (ComputeBudgetProgram.programId.equals(ix.programId)) {
+        // need check for data index
+        if (ix.data[0] === 3) {
+          ix.data = ComputeBudgetProgram.setComputeUnitPrice({
+            microLamports: newPriorityFee,
+          }).data;
+          return true;
+        }
+      }
+    }
 
-		// inject if none
-		tx.add(
-			ComputeBudgetProgram.setComputeUnitPrice({
-				microLamports: newPriorityFee
-			})
-		)
-		return true
-	}
+    // inject if none
+    tx.add(
+      ComputeBudgetProgram.setComputeUnitPrice({
+        microLamports: newPriorityFee,
+      })
+    );
+    return true;
+  }
 
 	return false
 }
