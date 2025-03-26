@@ -33,7 +33,7 @@ const payerKeypair = Keypair.fromSecretKey(new Uint8Array(JSON.parse(keypairBuff
 const payerWallet = new Wallet(payerKeypair)
 const DLMM_PROGRAM_ID = new PublicKey(DLMM_PROGRAM_IDS["localhost"])
 
-describe.skip("Test Seed Liquidity Single Bin", () => {
+describe.only("Test Seed Liquidity Single Bin", () => {
 	const WEN_DECIMALS = 5
 	const USDC_DECIMALS = 6
 	const WEN_SUPPLY = 100_000_000
@@ -150,13 +150,16 @@ describe.skip("Test Seed Liquidity Single Bin", () => {
 				activationType: ActivationTypeConfig.Slot,
 				activationPoint,
 				priceRounding: PriceRoundingConfig.Up,
-				hasAlphaVault: false
+				hasAlphaVault: false,
+				creatorPoolOnOffControl: false
 			},
 			dynamicAmm: null,
 			alphaVault: null,
 			lockLiquidity: null,
 			lfgSeedLiquidity: null,
-			singleBinSeedLiquidity: null
+			singleBinSeedLiquidity: null,
+			m3m3: null,
+			setDlmmPoolStatus: null
 		}
 
 		//create DLMM pool

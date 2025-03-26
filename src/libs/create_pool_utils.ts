@@ -175,7 +175,6 @@ export async function createPermissionlessDlmmPool(
 		"confirmed",
 		baseMintInfo.owner
 	)
-	console.log("base mint: ", baseMintAccount)
 	const baseDecimals = baseMintAccount.decimals
 
 	const initPrice = DLMM.getPricePerLamport(
@@ -209,10 +208,6 @@ export async function createPermissionlessDlmmPool(
 			cluster,
 			programId: dlmmProgramId
 		}
-	)
-
-	initPoolTx.instructions[0].keys.forEach((item) =>
-		console.log(item.pubkey.toString())
 	)
 
 	modifyComputeUnitPriceIx(initPoolTx, config.computeUnitPriceMicroLamports)
