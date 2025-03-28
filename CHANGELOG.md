@@ -1,9 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
+The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.INFO
 
-## [1.4.2] - 2025-03-06 - [PR #1](https://github.com/MeteoraAg/meteora-pool-setup/pull/11)
+## [1.4.3] - 2025-03-28 - [PR #28](https://github.com/MeteoraAg/meteora-pool-setup/pull/28)
+### Added 
+- Update function to create DLMM pool with Token2022.
+- Add prettier config file to format.
+
+## [1.4.2] - 2025-03-06 - [PR #11](https://github.com/MeteoraAg/meteora-pool-setup/pull/11)
 ### Added 
 - Add whitelist mode `permissioned_with_authority` when creating alpha vault.
 
