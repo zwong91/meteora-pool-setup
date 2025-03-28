@@ -38,7 +38,7 @@ const payerKeypair = Keypair.fromSecretKey(new Uint8Array(JSON.parse(keypairBuff
 const payerWallet = new Wallet(payerKeypair)
 const DLMM_PROGRAM_ID = new PublicKey(DLMM_PROGRAM_IDS["localhost"])
 
-describe("Test Seed Liquidity Single Bin", () => {
+describe("Test Seed Liquidity LFG", () => {
 	const WEN_DECIMALS = 5
 	const USDC_DECIMALS = 6
 	const WEN_SUPPLY = 100_000_000
@@ -156,13 +156,16 @@ describe("Test Seed Liquidity Single Bin", () => {
 				activationType: ActivationTypeConfig.Slot,
 				activationPoint,
 				priceRounding: PriceRoundingConfig.Up,
-				hasAlphaVault: false
+				hasAlphaVault: false,
+				creatorPoolOnOffControl: false
 			},
 			dynamicAmm: null,
 			alphaVault: null,
 			lockLiquidity: null,
 			lfgSeedLiquidity: null,
-			singleBinSeedLiquidity: null
+			singleBinSeedLiquidity: null,
+			m3m3: null,
+			setDlmmPoolStatus: null
 		}
 
 		//create DLMM pool
@@ -227,9 +230,9 @@ describe("Test Seed Liquidity Single Bin", () => {
 			}
 		)
 
-		// WEN balance after = WEN supply - seed amount - 1 lamport
+		// WEN balance after = WEN supply - seed amount
 		const wenBalanceAfter = await getTokenBalance(connection, userWEN)
-		const expectedBalanceAfter = new BN(WEN_SUPPLY * 10 ** WEN_DECIMALS - 1).sub(
+		const expectedBalanceAfter = new BN(WEN_SUPPLY * 10 ** WEN_DECIMALS).sub(
 			seedAmount
 		)
 		expect(wenBalanceAfter.toString()).toEqual(expectedBalanceAfter.toString())

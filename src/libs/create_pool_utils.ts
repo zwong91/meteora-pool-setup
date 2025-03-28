@@ -13,16 +13,12 @@ import {
 	getDlmmActivationType,
 	modifyComputeUnitPriceIx,
 	DLMM_PROGRAM_IDS,
-	PriceRoundingConfig,
 	isPriceRoundingUp
 } from "../"
 import { AmmImpl } from "@mercurial-finance/dynamic-amm-sdk"
 import { Wallet } from "@coral-xyz/anchor"
 import { BN } from "bn.js"
-import DLMM, {
-	LBCLMM_PROGRAM_IDS,
-	deriveCustomizablePermissionlessLbPair
-} from "@meteora-ag/dlmm"
+import DLMM, { deriveCustomizablePermissionlessLbPair } from "@meteora-ag/dlmm"
 import { CustomizableParams } from "@mercurial-finance/dynamic-amm-sdk/dist/cjs/src/amm/types"
 import {
 	deriveCustomizablePermissionlessConstantProductPoolAddress,
@@ -163,7 +159,13 @@ export async function createPermissionlessDlmmPool(
 		config.quoteSymbol,
 		config.quoteMint
 	)
-	const baseMintAccount = await getMint(connection, baseMint)
+	const baseMintInfo = await connection.getAccountInfo(baseMint)
+	const baseMintAccount = await getMint(
+		connection,
+		baseMint,
+		connection.commitment,
+		baseMintInfo.owner
+	)
 	const baseDecimals = baseMintAccount.decimals
 
 	const initPrice = DLMM.getPricePerLamport(
@@ -180,8 +182,7 @@ export async function createPermissionlessDlmmPool(
 
 	const cluster = opts?.cluster || "mainnet-beta"
 	const dlmmProgramId = opts?.programId ?? new PublicKey(DLMM_PROGRAM_IDS[cluster])
-
-	const initPoolTx = await DLMM.createCustomizablePermissionlessLbPair(
+	const initPoolTx = await DLMM.createCustomizablePermissionlessLbPair2(
 		connection,
 		new BN(binStep),
 		baseMint,

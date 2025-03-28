@@ -1,11 +1,7 @@
 import { Connection, Keypair, PublicKey } from "@solana/web3.js"
 import fs from "fs"
-import { DLMM_PROGRAM_IDS, DYNAMIC_AMM_PROGRAM_IDS } from "../libs/constants"
-import {
-	createPermissionlessDlmmPool,
-	createPermissionlessDynamicPool,
-	seedLiquiditySingleBin
-} from "../index"
+import { DLMM_PROGRAM_IDS } from "../libs/constants"
+import { createPermissionlessDlmmPool, seedLiquiditySingleBin } from "../index"
 import { BN, Wallet, web3 } from "@coral-xyz/anchor"
 import {
 	ActivationTypeConfig,
@@ -19,10 +15,7 @@ import {
 	getOrCreateAssociatedTokenAccount,
 	mintTo
 } from "@solana/spl-token"
-import {
-	deriveCustomizablePermissionlessLbPair,
-	getTokenBalance
-} from "@meteora-ag/dlmm"
+import { deriveCustomizablePermissionlessLbPair } from "@meteora-ag/dlmm"
 
 const keypairFilePath =
 	"./src/tests/keys/localnet/admin-bossj3JvwiNK7pvjr149DqdtJxf2gdygbcmEPTkb2F1.json"
@@ -150,13 +143,16 @@ describe("Test Seed Liquidity Single Bin", () => {
 				activationType: ActivationTypeConfig.Slot,
 				activationPoint,
 				priceRounding: PriceRoundingConfig.Up,
-				hasAlphaVault: false
+				hasAlphaVault: false,
+				creatorPoolOnOffControl: false
 			},
 			dynamicAmm: null,
 			alphaVault: null,
 			lockLiquidity: null,
 			lfgSeedLiquidity: null,
-			singleBinSeedLiquidity: null
+			singleBinSeedLiquidity: null,
+			m3m3: null,
+			setDlmmPoolStatus: null
 		}
 
 		//create DLMM pool

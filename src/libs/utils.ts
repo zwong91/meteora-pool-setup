@@ -37,7 +37,7 @@ import {
 	PriceRoundingConfig,
 	WhitelistModeConfig
 } from ".."
-import { getMint } from "@solana/spl-token"
+import { getMint, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token"
 import { parse } from "csv-parse"
 
 export const DEFAULT_ADD_LIQUIDITY_CU = 800_000
@@ -172,7 +172,13 @@ export async function getQuoteDecimals(
 		throw new Error(`Either quoteSymbol or quoteMint must be provided`)
 	}
 	if (quoteMint) {
-		const mintAccount = await getMint(connection, new PublicKey(quoteMint))
+		const quoteMintInfo = await connection.getAccountInfo(new PublicKey(quoteMint))
+		const mintAccount = await getMint(
+			connection,
+			new PublicKey(quoteMint),
+			connection.commitment,
+			quoteMintInfo.owner
+		)
 		const decimals = mintAccount.decimals
 		return decimals
 	}
