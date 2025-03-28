@@ -2,19 +2,14 @@ import { Connection, Keypair, PublicKey } from "@solana/web3.js"
 import fs from "fs"
 import { DLMM_PROGRAM_IDS } from "../libs/constants"
 import { createPermissionlessDlmmPool } from "../index"
-import { Wallet, web3 } from "@coral-xyz/anchor"
+import { Wallet } from "@coral-xyz/anchor"
 import {
 	ActivationTypeConfig,
 	MeteoraConfig,
 	PriceRoundingConfig
 } from "../libs/config"
-import {
-	ASSOCIATED_TOKEN_PROGRAM_ID,
-	TOKEN_2022_PROGRAM_ID,
-	createMint,
-	getOrCreateAssociatedTokenAccount,
-	mintTo
-} from "@solana/spl-token"
+import { ExtensionType } from "@solana/spl-token"
+import { createToken2022, mintToToken2022 } from "./utils"
 
 const keypairFilePath =
 	"./src/tests/keys/localnet/admin-bossj3JvwiNK7pvjr149DqdtJxf2gdygbcmEPTkb2F1.json"
@@ -36,129 +31,52 @@ describe("Test Create Dlmm Pool with token2022", () => {
 	let WEN: PublicKey
 	let USDC: PublicKey
 	let JUP: PublicKey
-	let userWEN: web3.PublicKey
-	let userUSDC: web3.PublicKey
-	let userJUP: web3.PublicKey
 
 	beforeAll(async () => {
-		WEN = await createMint(
-			connection,
-			payerKeypair,
-			payerKeypair.publicKey,
-			null,
-			WEN_DECIMALS,
-			Keypair.generate(),
-			undefined,
-			TOKEN_2022_PROGRAM_ID
-		)
+		const extensions = [ExtensionType.TransferFeeConfig]
+		WEN = await createToken2022(connection, payerKeypair, WEN_DECIMALS, extensions)
 
-		USDC = await createMint(
+		USDC = await createToken2022(
 			connection,
 			payerKeypair,
-			payerKeypair.publicKey,
-			null,
+
 			USDC_DECIMALS,
-			Keypair.generate(),
-			undefined,
-			TOKEN_2022_PROGRAM_ID
+			extensions
 		)
 
-		JUP = await createMint(
+		JUP = await createToken2022(
 			connection,
 			payerKeypair,
-			payerKeypair.publicKey,
-			null,
+
 			JUP_DECIMALS,
-			Keypair.generate(),
-			undefined,
-			TOKEN_2022_PROGRAM_ID
+			extensions
 		)
 
-		const userWenInfo = await getOrCreateAssociatedTokenAccount(
+		await mintToToken2022(
 			connection,
 			payerKeypair,
 			WEN,
+			payerKeypair,
 			payerKeypair.publicKey,
-			false,
-			"confirmed",
-			{
-				commitment: "confirmed"
-			},
-			TOKEN_2022_PROGRAM_ID,
-			ASSOCIATED_TOKEN_PROGRAM_ID
+			WEN_SUPPLY * 10 ** WEN_DECIMALS
 		)
-		userWEN = userWenInfo.address
 
-		const userUsdcInfo = await getOrCreateAssociatedTokenAccount(
+		await mintToToken2022(
 			connection,
 			payerKeypair,
 			USDC,
+			payerKeypair,
 			payerKeypair.publicKey,
-			false,
-			"confirmed",
-			{
-				commitment: "confirmed"
-			},
-			TOKEN_2022_PROGRAM_ID,
-			ASSOCIATED_TOKEN_PROGRAM_ID
+			USDC_SUPPLY * 10 ** USDC_DECIMALS
 		)
-		userUSDC = userUsdcInfo.address
 
-		const userJupInfo = await getOrCreateAssociatedTokenAccount(
+		await mintToToken2022(
 			connection,
 			payerKeypair,
 			JUP,
-			payerKeypair.publicKey,
-			false,
-			"confirmed",
-			{
-				commitment: "confirmed"
-			},
-			TOKEN_2022_PROGRAM_ID,
-			ASSOCIATED_TOKEN_PROGRAM_ID
-		)
-		userJUP = userJupInfo.address
-
-		await mintTo(
-			connection,
 			payerKeypair,
-			WEN,
-			userWEN,
 			payerKeypair.publicKey,
-			WEN_SUPPLY * 10 ** WEN_DECIMALS,
-			[],
-			{
-				commitment: "confirmed"
-			},
-			TOKEN_2022_PROGRAM_ID
-		)
-
-		await mintTo(
-			connection,
-			payerKeypair,
-			USDC,
-			userUSDC,
-			payerKeypair.publicKey,
-			USDC_SUPPLY * 10 ** USDC_DECIMALS,
-			[],
-			{
-				commitment: "confirmed"
-			},
-			TOKEN_2022_PROGRAM_ID
-		)
-
-		await mintTo(
-			connection,
-			payerKeypair,
-			JUP,
-			userJUP,
-			payerKeypair.publicKey,
-			JUP_SUPPLY * 10 ** JUP_DECIMALS,
-			[],
-			{
-				commitment: "confirmed"
-			},
-			TOKEN_2022_PROGRAM_ID
+			JUP_SUPPLY * 10 ** JUP_DECIMALS
 		)
 	})
 

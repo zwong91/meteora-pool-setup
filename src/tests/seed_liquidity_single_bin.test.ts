@@ -1,11 +1,7 @@
 import { Connection, Keypair, PublicKey } from "@solana/web3.js"
 import fs from "fs"
-import { DLMM_PROGRAM_IDS, DYNAMIC_AMM_PROGRAM_IDS } from "../libs/constants"
-import {
-	createPermissionlessDlmmPool,
-	createPermissionlessDynamicPool,
-	seedLiquiditySingleBin
-} from "../index"
+import { DLMM_PROGRAM_IDS } from "../libs/constants"
+import { createPermissionlessDlmmPool, seedLiquiditySingleBin } from "../index"
 import { BN, Wallet, web3 } from "@coral-xyz/anchor"
 import {
 	ActivationTypeConfig,
@@ -19,10 +15,7 @@ import {
 	getOrCreateAssociatedTokenAccount,
 	mintTo
 } from "@solana/spl-token"
-import {
-	deriveCustomizablePermissionlessLbPair,
-	getTokenBalance
-} from "@meteora-ag/dlmm"
+import { deriveCustomizablePermissionlessLbPair } from "@meteora-ag/dlmm"
 
 const keypairFilePath =
 	"./src/tests/keys/localnet/admin-bossj3JvwiNK7pvjr149DqdtJxf2gdygbcmEPTkb2F1.json"
@@ -33,7 +26,7 @@ const payerKeypair = Keypair.fromSecretKey(new Uint8Array(JSON.parse(keypairBuff
 const payerWallet = new Wallet(payerKeypair)
 const DLMM_PROGRAM_ID = new PublicKey(DLMM_PROGRAM_IDS["localhost"])
 
-describe.only("Test Seed Liquidity Single Bin", () => {
+describe("Test Seed Liquidity Single Bin", () => {
 	const WEN_DECIMALS = 5
 	const USDC_DECIMALS = 6
 	const WEN_SUPPLY = 100_000_000

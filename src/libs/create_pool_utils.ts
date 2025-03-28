@@ -13,27 +13,18 @@ import {
 	getDlmmActivationType,
 	modifyComputeUnitPriceIx,
 	DLMM_PROGRAM_IDS,
-	PriceRoundingConfig,
 	isPriceRoundingUp
 } from "../"
 import { AmmImpl } from "@mercurial-finance/dynamic-amm-sdk"
 import { Wallet } from "@coral-xyz/anchor"
 import { BN } from "bn.js"
-import DLMM, {
-	LBCLMM_PROGRAM_IDS,
-	deriveCustomizablePermissionlessLbPair
-} from "@meteora-ag/dlmm"
+import DLMM, { deriveCustomizablePermissionlessLbPair } from "@meteora-ag/dlmm"
 import { CustomizableParams } from "@mercurial-finance/dynamic-amm-sdk/dist/cjs/src/amm/types"
 import {
 	deriveCustomizablePermissionlessConstantProductPoolAddress,
-	createProgram,
-	getAssociatedTokenAccount
+	createProgram
 } from "@mercurial-finance/dynamic-amm-sdk/dist/cjs/src/amm/utils"
-import {
-	getAssociatedTokenAddressSync,
-	getMint,
-	TOKEN_2022_PROGRAM_ID
-} from "@solana/spl-token"
+import { getMint } from "@solana/spl-token"
 
 export async function createPermissionlessDynamicPool(
 	config: MeteoraConfig,

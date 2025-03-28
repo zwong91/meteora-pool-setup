@@ -1,11 +1,22 @@
 import { getAssociatedTokenAccount } from "@mercurial-finance/dynamic-amm-sdk/dist/cjs/src/amm/utils"
 import { wrapSOLInstruction } from "@meteora-ag/dlmm"
-import { NATIVE_MINT } from "@solana/spl-token"
+import {
+	createInitializeMint2Instruction,
+	createInitializeTransferFeeConfigInstruction,
+	createMintToInstruction,
+	ExtensionType,
+	getMintLen,
+	getOrCreateAssociatedTokenAccount,
+	NATIVE_MINT,
+	TOKEN_2022_PROGRAM_ID
+} from "@solana/spl-token"
 import {
 	Connection,
 	Keypair,
 	LAMPORTS_PER_SOL,
 	PublicKey,
+	sendAndConfirmTransaction,
+	SystemProgram,
 	Transaction
 } from "@solana/web3.js"
 import { BN } from "bn.js"
@@ -50,4 +61,85 @@ export const airDropSol = async (
 		console.error(error)
 		throw error
 	}
+}
+
+export async function createToken2022(
+	connection: Connection,
+	payer: Keypair,
+	decimals: number,
+	extensions: ExtensionType[]
+): Promise<PublicKey> {
+	const mintKeypair = Keypair.generate()
+	const maxFee = BigInt(9 * Math.pow(10, decimals))
+	const feeBasisPoints = 100
+	const transferFeeConfigAuthority = Keypair.generate()
+	const withdrawWithheldAuthority = Keypair.generate()
+
+	let mintLen = getMintLen(extensions)
+	const mintLamports = await connection.getMinimumBalanceForRentExemption(mintLen)
+	const transaction = new Transaction().add(
+		SystemProgram.createAccount({
+			fromPubkey: payer.publicKey,
+			newAccountPubkey: mintKeypair.publicKey,
+			space: mintLen,
+			lamports: Number(mintLamports.toString()),
+			programId: TOKEN_2022_PROGRAM_ID
+		}),
+		createInitializeTransferFeeConfigInstruction(
+			mintKeypair.publicKey,
+			transferFeeConfigAuthority.publicKey,
+			withdrawWithheldAuthority.publicKey,
+			feeBasisPoints,
+			maxFee,
+			TOKEN_2022_PROGRAM_ID
+		),
+		createInitializeMint2Instruction(
+			mintKeypair.publicKey,
+			decimals,
+			payer.publicKey,
+			null,
+			TOKEN_2022_PROGRAM_ID
+		)
+	)
+
+	await sendAndConfirmTransaction(connection, transaction, [payer, mintKeypair], {
+		commitment: "confirmed"
+	})
+
+	return mintKeypair.publicKey
+}
+
+export async function mintToToken2022(
+	connection: Connection,
+	payer: Keypair,
+	mint: PublicKey,
+	mintAuthority: Keypair,
+	toWallet: PublicKey,
+	rawAmount: BN
+) {
+	const destination = await getOrCreateAssociatedTokenAccount(
+		connection,
+		payer,
+		mint,
+		toWallet,
+		true,
+		undefined,
+		undefined,
+		TOKEN_2022_PROGRAM_ID
+	)
+	const mintIx = createMintToInstruction(
+		mint,
+		destination.address,
+		mintAuthority.publicKey,
+		rawAmount,
+		[],
+		TOKEN_2022_PROGRAM_ID
+	)
+
+	let transaction = new Transaction()
+	transaction.add(mintIx)
+
+	await sendAndConfirmTransaction(connection, transaction, [payer, mintAuthority], {
+		commitment: "confirmed"
+	})
 }
