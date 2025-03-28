@@ -36,21 +36,9 @@ describe("Test Create Dlmm Pool with token2022", () => {
 		const extensions = [ExtensionType.TransferFeeConfig]
 		WEN = await createToken2022(connection, payerKeypair, WEN_DECIMALS, extensions)
 
-		USDC = await createToken2022(
-			connection,
-			payerKeypair,
+		USDC = await createToken2022(connection, payerKeypair, USDC_DECIMALS, extensions)
 
-			USDC_DECIMALS,
-			extensions
-		)
-
-		JUP = await createToken2022(
-			connection,
-			payerKeypair,
-
-			JUP_DECIMALS,
-			extensions
-		)
+		JUP = await createToken2022(connection, payerKeypair, JUP_DECIMALS, extensions)
 
 		await mintToToken2022(
 			connection,
