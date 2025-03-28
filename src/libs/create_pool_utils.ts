@@ -163,7 +163,7 @@ export async function createPermissionlessDlmmPool(
 	const baseMintAccount = await getMint(
 		connection,
 		baseMint,
-		"confirmed",
+		connection.commitment,
 		baseMintInfo.owner
 	)
 	const baseDecimals = baseMintAccount.decimals
@@ -180,7 +180,6 @@ export async function createPermissionlessDlmmPool(
 		!isPriceRoundingUp(config.dlmm.priceRounding)
 	)
 
-	// console.log("ops: ", opts);
 	const cluster = opts?.cluster || "mainnet-beta"
 	const dlmmProgramId = opts?.programId ?? new PublicKey(DLMM_PROGRAM_IDS[cluster])
 	const initPoolTx = await DLMM.createCustomizablePermissionlessLbPair2(

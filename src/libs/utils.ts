@@ -176,7 +176,7 @@ export async function getQuoteDecimals(
 		const mintAccount = await getMint(
 			connection,
 			new PublicKey(quoteMint),
-			"confirmed",
+			connection.commitment,
 			quoteMintInfo.owner
 		)
 		const decimals = mintAccount.decimals
