@@ -48,6 +48,7 @@ export async function createDammV2CustomizablePool(
 	)
 
 	let baseTokenInfo = null
+	let baseTokenProgram = TOKEN_PROGRAM_ID
 
 	const baseMintAccountInfo = await connection.getAccountInfo(
 		new PublicKey(baseTokenMint)
@@ -66,6 +67,7 @@ export async function createDammV2CustomizablePool(
 			mint: baseMint,
 			currentEpoch: epochInfo.epoch
 		}
+		baseTokenProgram = TOKEN_2022_PROGRAM_ID
 	}
 
 	const baseDecimals = baseMint.decimals
@@ -208,6 +210,7 @@ export async function createDammV2CustomizablePool(
 		dynamicFee: config.dynamicAmmV2.hasDynamicFee ? dynamicFeeConfig : null
 	}
 	const positionNft = Keypair.generate()
+
 	const {
 		tx: initCustomizePoolTx,
 		pool,
@@ -235,7 +238,7 @@ export async function createDammV2CustomizablePool(
 		activationPoint: config.dynamicAmmV2.activationPoint
 			? new BN(config.dynamicAmmV2.activationPoint)
 			: null,
-		tokenAProgram: TOKEN_PROGRAM_ID,
+		tokenAProgram: baseTokenProgram,
 		tokenBProgram: TOKEN_PROGRAM_ID
 	})
 
