@@ -12,6 +12,7 @@ import {
 	createPermissionlessDlmmPool,
 	createPermissionlessDynamicPool
 } from "./libs/create_pool_utils"
+import { createDammV2CustomizablePool } from "./libs/create_damm_v2_customizable_pool_utils"
 
 async function main() {
 	let config: MeteoraConfig = parseConfigFromCli()
@@ -65,8 +66,16 @@ async function main() {
 			baseMint,
 			quoteMint
 		)
-	} else if (config.dynamicAmm && config.dlmm) {
-		throw new Error("Either provide only Dynamic AMM or DLMM configuration")
+	} else if (!config.dynamicAmm && !config.dlmm && config.dynamicAmmV2) {
+		await createDammV2CustomizablePool(
+			config,
+			connection,
+			wallet,
+			baseMint,
+			quoteMint
+		)
+	} else if (!config.dynamicAmm && !config.dynamicAmm && !config.dlmm) {
+		throw new Error("Either provide only Dynamic AMM V1,2 and DLMM configuration")
 	} else {
 		throw new Error("Must provide Dynamic AMM or DLMM configuration")
 	}

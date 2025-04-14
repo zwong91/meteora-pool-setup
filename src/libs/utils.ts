@@ -24,6 +24,10 @@ import { simulateTransaction } from "@coral-xyz/anchor/dist/cjs/utils/rpc"
 import { ActivationType as DynamicAmmActivationType } from "@mercurial-finance/dynamic-amm-sdk/dist/cjs/src/amm/types"
 import { ActivationType as DlmmActivationType } from "@meteora-ag/dlmm"
 import {
+	ActivationType as DammV2ActivationType,
+	FeeSchedulerMode as DammV2FeeSchedulerMode
+} from "@meteora-ag/cp-amm-sdk"
+import {
 	PermissionWithAuthority,
 	PermissionWithMerkleProof,
 	Permissionless,
@@ -37,7 +41,7 @@ import {
 	PriceRoundingConfig,
 	WhitelistModeConfig
 } from ".."
-import { getMint, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token"
+import { getMint } from "@solana/spl-token"
 import { parse } from "csv-parse"
 
 export const DEFAULT_ADD_LIQUIDITY_CU = 800_000
@@ -191,6 +195,24 @@ export async function getQuoteDecimals(
 	}
 }
 
+export const getSqrtPriceFromPrice = (
+	price: string,
+	tokenADecimal: number,
+	tokenBDecimal: number
+): BN => {
+	const decimalPrice = new Decimal(price)
+
+	const adjustedByDecimals = decimalPrice.div(
+		new Decimal(10 ** (tokenADecimal - tokenBDecimal))
+	)
+
+	const sqrtValue = Decimal.sqrt(adjustedByDecimals)
+
+	const sqrtValueQ64 = sqrtValue.mul(Decimal.pow(2, 64))
+
+	return new BN(sqrtValueQ64.floor().toFixed())
+}
+
 export async function runSimulateTransaction(
 	connection: Connection,
 	signers: Array<Keypair>,
@@ -222,6 +244,18 @@ export function getDynamicAmmActivationType(
 		return DynamicAmmActivationType.Slot
 	} else if (activationType == ActivationTypeConfig.Timestamp) {
 		return DynamicAmmActivationType.Timestamp
+	} else {
+		throw new Error(`Unsupported Dynamic AMM activation type: ${activationType}`)
+	}
+}
+
+export function getDammV2ActivationType(
+	activationType: ActivationTypeConfig
+): DammV2ActivationType {
+	if (activationType == ActivationTypeConfig.Slot) {
+		return DammV2ActivationType.Slot
+	} else if (activationType == ActivationTypeConfig.Timestamp) {
+		return DammV2ActivationType.Timestamp
 	} else {
 		throw new Error(`Unsupported Dynamic AMM activation type: ${activationType}`)
 	}
