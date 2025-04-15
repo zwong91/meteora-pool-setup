@@ -55,7 +55,7 @@ async function main() {
 			quoteMint
 		)
 	} else {
-		throw new Error("Must provide Dynamic AMM or DLMM configuration")
+		throw new Error("Must provide Dynamic V2 configuration")
 	}
 }
 

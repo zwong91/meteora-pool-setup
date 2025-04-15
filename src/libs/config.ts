@@ -140,6 +140,9 @@ const CONFIG_SCHEMA: JSONSchemaType<MeteoraConfig> = {
 				hasAlphaVault: {
 					type: "boolean"
 				},
+				useDynamicFee: {
+					type: "boolean"
+				},
 				dynamicFee: {
 					type: "object",
 					nullable: true,
@@ -167,7 +170,8 @@ const CONFIG_SCHEMA: JSONSchemaType<MeteoraConfig> = {
 				"activationType",
 				"hasAlphaVault",
 				"collectFeeMode",
-				"periodFrequency"
+				"periodFrequency",
+				"useDynamicFee"
 			],
 			additionalProperties: false
 		},
@@ -414,6 +418,7 @@ export interface DynamicAmmV2Config {
 	activationType: ActivationTypeConfig
 	activationPoint: number | null
 	hasAlphaVault: boolean
+	useDynamicFee: boolean
 	dynamicFee: DynamicFee | null
 }
 

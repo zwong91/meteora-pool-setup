@@ -208,7 +208,7 @@ export async function createDammV2CustomizablePool(
 		protocolFeePercent: 20,
 		partnerFeePercent: 0,
 		referralFeePercent: 20,
-		dynamicFee: dynamicFeeConfig
+		dynamicFee: config.dynamicAmmV2.useDynamicFee ? dynamicFeeConfig : null
 	}
 	const positionNft = Keypair.generate()
 

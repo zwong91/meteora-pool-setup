@@ -22,6 +22,7 @@
         "activationType": "timestamp",
         "activationPoint": null,
         "hasAlphaVault": false,
+        "useDynamicFee": false,
         "dynamicFee": {
             "filterPeriod": 10,
             "decayPeriod": 120,
