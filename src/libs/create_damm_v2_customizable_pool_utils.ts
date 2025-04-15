@@ -188,11 +188,12 @@ export async function createDammV2CustomizablePool(
 	const dynamicFeeConfig = {
 		binStep: 1,
 		binStepU128: new BN("1844674407370955"),
-		filterPeriod: 10,
-		decayPeriod: 120,
-		reductionFactor: 5000,
-		variableFeeControl: 2000000,
-		maxVolatilityAccumulator: 100000
+		filterPeriod: config.dynamicAmmV2.dynamicFee.filterPeriod ?? 10,
+		decayPeriod: config.dynamicAmmV2.dynamicFee.decayPeriod ?? 120,
+		reductionFactor: config.dynamicAmmV2.dynamicFee.reductionFactor ?? 5000,
+		variableFeeControl: config.dynamicAmmV2.dynamicFee.variableFeeControl ?? 2000000,
+		maxVolatilityAccumulator:
+			config.dynamicAmmV2.dynamicFee.maxVolatilityAccumulator ?? 100000
 	}
 	const baseFee: BaseFee = {
 		cliffFeeNumerator: new BN(config.dynamicAmmV2.cliffFeeNumerator),
@@ -207,7 +208,7 @@ export async function createDammV2CustomizablePool(
 		protocolFeePercent: 20,
 		partnerFeePercent: 0,
 		referralFeePercent: 20,
-		dynamicFee: config.dynamicAmmV2.hasDynamicFee ? dynamicFeeConfig : null
+		dynamicFee: dynamicFeeConfig
 	}
 	const positionNft = Keypair.generate()
 

@@ -3,13 +3,12 @@
     "dryRun": true,
     "keypairFilePath": "id.json",
     "computeUnitPriceMicroLamports": 100000,
-    "baseMint": "9PEAwPrzRtUHCGF7hMop1uwPBkJiTQPBFjaDCwXtFAda",
+    "baseMint": "HHXsdnThkt7ChBpU5YGQJCWZWh9QsHR1hRJarSwehgVH",
     "quoteSymbol": "SOL",
     "dynamicAmmV2": {
         "creator": "4JTYKJAyS7eAXQRSxvMbmqgf6ajf3LR9JrAXpVEcww2q",
-        "baseAmount": 100,
+        "baseAmount": 1000,
         "quoteAmount": null,
-        "hasDynamicFee": false,
         "cliffFeeNumerator": 2500000,
         "numberOfPeriod": 0,
         "periodFrequency": 0,
@@ -22,6 +21,13 @@
         "maxSqrtPrice": null,
         "activationType": "timestamp",
         "activationPoint": null,
-        "hasAlphaVault": false
+        "hasAlphaVault": false,
+        "dynamicFee": {
+            "filterPeriod": 10,
+            "decayPeriod": 120,
+            "reductionFactor": 5000,
+            "variableFeeControl": 2000000,
+            "maxVolatilityAccumulator": 100000
+        }
     }
   }

@@ -94,9 +94,6 @@ const CONFIG_SCHEMA: JSONSchemaType<MeteoraConfig> = {
 				quoteAmount: {
 					anyOf: [{ type: "number" }, { type: "string" }, { type: "null" }]
 				},
-				hasDynamicFee: {
-					type: "boolean"
-				},
 				cliffFeeNumerator: {
 					type: "number"
 				},
@@ -142,6 +139,27 @@ const CONFIG_SCHEMA: JSONSchemaType<MeteoraConfig> = {
 				},
 				hasAlphaVault: {
 					type: "boolean"
+				},
+				dynamicFee: {
+					type: "object",
+					nullable: true,
+					properties: {
+						filterPeriod: {
+							type: "number"
+						},
+						decayPeriod: {
+							type: "number"
+						},
+						reductionFactor: {
+							type: "number"
+						},
+						variableFeeControl: {
+							type: "number"
+						},
+						maxVolatilityAccumulator: {
+							type: "number"
+						}
+					}
 				}
 			},
 			required: [
@@ -149,8 +167,7 @@ const CONFIG_SCHEMA: JSONSchemaType<MeteoraConfig> = {
 				"activationType",
 				"hasAlphaVault",
 				"collectFeeMode",
-				"periodFrequency",
-				"hasDynamicFee"
+				"periodFrequency"
 			],
 			additionalProperties: false
 		},
@@ -384,7 +401,6 @@ export interface DynamicAmmV2Config {
 	creator: string
 	baseAmount: number | string | null
 	quoteAmount: number | string | null
-	hasDynamicFee: boolean
 	cliffFeeNumerator: number
 	numberOfPeriod: number
 	periodFrequency: number
@@ -398,6 +414,15 @@ export interface DynamicAmmV2Config {
 	activationType: ActivationTypeConfig
 	activationPoint: number | null
 	hasAlphaVault: boolean
+	dynamicFee: DynamicFee | null
+}
+
+export interface DynamicFee {
+	filterPeriod: number
+	decayPeriod: number
+	reductionFactor: number
+	variableFeeControl: number
+	maxVolatilityAccumulator: number
 }
 
 export interface DlmmConfig {
