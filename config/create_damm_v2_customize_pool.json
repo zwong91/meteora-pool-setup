@@ -1,10 +1,10 @@
 {
-    "rpcUrl": "https://api.devnet.solana.com",
+    "rpcUrl": "https://api.mainnet-beta.solana.com",
     "dryRun": true,
     "keypairFilePath": "id.json",
     "computeUnitPriceMicroLamports": 100000,
-    "baseMint": "HHXsdnThkt7ChBpU5YGQJCWZWh9QsHR1hRJarSwehgVH",
-    "quoteSymbol": "SOL",
+    "baseMint": "6UP2q4xjkkxTbn4CHtFHh25f684n56eeDAhTgxajnhtH",
+    "quoteSymbol": "USDC",
     "dynamicAmmV2": {
         "creator": "4JTYKJAyS7eAXQRSxvMbmqgf6ajf3LR9JrAXpVEcww2q",
         "baseAmount": 1000,
@@ -16,7 +16,7 @@
         "feeSchedulerMode": 0,
         "collectFeeMode": 0,
         "initPrice": "0.0001",
-        "createPoolSingleSide": false,
+        "createPoolSingleSide": true,
         "minSqrtPrice": null,
         "maxSqrtPrice": null,
         "activationType": "timestamp",
