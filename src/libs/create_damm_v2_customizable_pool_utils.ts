@@ -105,6 +105,7 @@ export async function createDammV2CustomizablePool(
 				initSqrtPrice: minSqrtPrice, // single side deposit base only
 				tokenAInfo: baseTokenInfo
 			})
+			initPriceInQ64 = minSqrtPrice
 		} else {
 			throw new Error("Invalid create pool single side, must provide base Amount")
 		}
@@ -183,7 +184,7 @@ export async function createDammV2CustomizablePool(
 		`- Using base token with amount = ${getDecimalizedAmount(tokenAAmount, baseDecimals)}, in lamport = ${tokenAAmount}`
 	)
 	console.log(
-		`- Using quote token with amount = ${getDecimalizedAmount(tokenBAmount, quoteDecimals)}, in lamport = ${tokenBAmount}`
+		`- Using quote token with amount = ${config.dynamicAmmV2.createPoolSingleSide ? 0 : getDecimalizedAmount(tokenBAmount, quoteDecimals)}, in lamport = ${tokenBAmount}`
 	)
 	console.log(
 		`- Init price ${getPriceFromSqrtPrice(initPriceInQ64, baseDecimals, quoteDecimals)}`
@@ -233,12 +234,8 @@ export async function createDammV2CustomizablePool(
 		tokenBMint: quoteTokenMint,
 		tokenAAmount: tokenAAmount,
 		tokenBAmount: tokenBAmount,
-		sqrtMinPrice: config.dynamicAmmV2.minSqrtPrice
-			? new BN(config.dynamicAmmV2.minSqrtPrice)
-			: MIN_SQRT_PRICE,
-		sqrtMaxPrice: config.dynamicAmmV2.maxSqrtPrice
-			? new BN(config.dynamicAmmV2.maxSqrtPrice)
-			: MAX_SQRT_PRICE,
+		sqrtMinPrice: minSqrtPrice,
+		sqrtMaxPrice: maxSqrtPrice,
 		liquidityDelta: liquidityDelta,
 		initSqrtPrice: initPriceInQ64,
 		poolFees: poolFees,
