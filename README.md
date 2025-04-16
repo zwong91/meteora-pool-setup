@@ -1,6 +1,26 @@
 # Meteora Pool Toolkit
 Scripts to create Meteora pools easily.
 
+## Quick Navigation
+- [Installation](#installation)
+- [Configuration](#configuration)
+  - [General Configuration](#general-configuration)
+  - [Create Base Token Configuration](#create-base-token-configuration)
+  - [Dynamic AMM Configuration](#dynamic-amm-configuration)
+  - [Dynamic AMM V2 Configuration](#dynamic-amm-v2-configuration)
+  - [DLMM Configuration](#dlmm-configuration)
+  - [DLMM Seed Liquidity Configurations](#dlmm-seed-liquidity-single-bin-configuration)
+  - [Alpha Vault Configurations](#alpha-vault-configuration)
+  - [M3M3 Configuration](#create-m3m3-configuration)
+- [Testing](#testings)
+- [Running Scripts](#run-the-scripts)
+  - [Create Dynamic AMM Pool](#run-the-scripts)
+  - [Create Dynamic AMM V2 Pool](#run-the-scripts)
+  - [Create DLMM Pool](#run-the-scripts)
+  - [Create Alpha Vault](#run-the-scripts)
+  - [Seed Liquidity](#run-the-scripts)
+  - [Create M3M3 Farm](#run-the-scripts)
+
 ## Installation
 We need [bun](https://bun.sh/) to run the scripts, install it via [bun installation](https://bun.sh/docs/installation).
 
@@ -20,6 +40,7 @@ Also we need to provide the keypair for the payer wallet in `keypair.json` file.
 - `quoteSymbol`: Quote token symbol, only `SOL` or `USDC` is supported.
 - `quoteMint`: Quote token mint, in case the user wants to create a DLMM launch pool with a token other than SOL or USDC.
 - `dynamicAmm`: Dynamic AMM pool configuration.
+- `dynamicAmmV2`: Dynamic AMM V2 pool configuration.
 - `dlmm`: DLMM pool configuration.
 - `alphaVault`: Fcfs or Prorata Alpha Vault configuration.
 
@@ -37,6 +58,30 @@ Also we need to provide the keypair for the payer wallet in `keypair.json` file.
 - `tradeFeeNumerator`: Trade fee numerator, with fee denominator is set to 100_000.
 - `activationType`: To activate pool trading base on `slot` or `timestamp`.
 - `activationPoint`: To activate pool trading at a point, either slot valut or timestamp value base on `activationType`.
+- `hasAlphaVault`: Whether alpha vault is enabled or not for this pool.
+
+### Dynamic AMM V2 configuration
+- `baseAmount`: Base token amount.
+- `quoteAmount`: Quote token amount.
+- `cliffFeeNumerator`: Cliff fee numerator at the cliff point, with fee denominator is set to `1_000_000_000`.
+- `numberOfPeriod`: Number of periods for fee reduction schedule
+- `periodFrequency`: Frequency of each period (in slots or seconds based on activation type). if `periodFrequency == 0` the `FeeScheduler` will not be set up.
+- `reductionFactor`: Factor for reducing fees across periods
+- `feeSchedulerMode`: Fee scheduler mode (0 = linear, 1 = exponential)
+- `collectFeeMode`: Fee collection mode (0 = base + quote, 1 = only quote)
+- `initPrice`: Initial price for the pool (can be null in case providing both base amount and quote amount then initSqrtPrice will calculate inside script)
+- `createPoolSingleSide`: Whether to create the pool with only one token side (true/false). Currently, Support deposit base only.
+- `minSqrtPrice`: Min price range setup (null to use default)
+- `maxSqrtPrice`: Max price range setup (null to use default)
+- `useDynamicFee`: Whether to use dynamic fee calculation based on price volatility (true/false)
+- `dynamicFee`: Configuration when useDynamicFee is true if not provide will use as default params in scripts
+    - `filterPeriod`: Period for filtering price updates
+    - `decayPeriod`: Period for decaying volatility accumulator
+    - `reductionFactor`: Factor for reducing the volatility impact
+    - `variableFeeControl`: Parameter controlling the variable fee response
+    - `maxVolatilityAccumulator`: Maximum value for the volatility accumulator
+- `activationType`: To activate pool trading base on `slot` or `timestamp`.
+- `activationPoint`: To activate pool trading at a point, either slot value or timestamp value base on `activationType`.
 - `hasAlphaVault`: Whether alpha vault is enabled or not for this pool.
 
 ### DLMM configuration
@@ -110,27 +155,32 @@ Then run the test: `bun test`
 ## Run the scripts
 Run the script with config file specified in the CLI, some examples:
 
-** Create dynamic AMM pool**
+**Create dynamic AMM pool**
 ```bash
 bun run src/create_pool.ts --config ./config/create_dynamic_amm_pool.json
 ```
 
-** Create dynamic AMM pool with new token mint**
+**Create customizable dynamic AMM V2 pool**
+```bash
+bun run src/create_damm_v2_customizable_pool.ts --config ./config/create_damm_v2_customize_pool.json
+```
+
+**Create dynamic AMM pool with new token mint**
 ```bash
 bun run src/create_pool.ts --config ./config/create_dynamic_amm_pool_with_new_token.json
 ```
 
-** Create new DLMM pool**
+**Create new DLMM pool**
 ```bash
 bun run src/create_pool.ts --config ./config/create_dlmm_pool.json
 ```
 
-** Create new DLMM pool without strict quote token**
+**Create new DLMM pool without strict quote token**
 ```bash
 bun run src/create_pool.ts --config ./config/create_dlmm_pool_without_strict_quote_token.json
 ```
 
-** Create new DLMM pool with alpha vault**
+**Create new DLMM pool with alpha vault**
 ```bash
 bun run src/create_pool.ts --config ./config/create_dlmm_pool_with_fcfs_alpha_vault.json
 ```
@@ -139,39 +189,39 @@ Then run
 bun run src/create_alpha_vault.ts --config ./config/create_dlmm_pool_with_fcfs_alpha_vault.json
 ```
 
-** Lock liquidity for Dynamic AMM pool**
+**Lock liquidity for Dynamic AMM pool**
 ```bash
 bun run src/lock_liquidity.ts --config ./config/lock_liquidity.json
 ```
 
-** Seed liquidity for DLMM pool with single bin strategy**
+**Seed liquidity for DLMM pool with single bin strategy**
 ```bash
 bun run src/seed_liquidity_single_bin.ts --config ./config/seed_liquidity_single_bin.json
 ```
 
-** Seed liquidity for DLMM pool with LFG strategy**
+**Seed liquidity for DLMM pool with LFG strategy**
 ```bash
 bun run src/seed_liquidity_lfg.ts --config ./config/seed_liquidity_lfg.json
 ```
 
-** Create M3M3 farm**
+**Create M3M3 farm**
 This script requires you to create the token mint and the pool first.
 After that you need to lock the liquidity before creating the M3M3 farm. The addresses in the allocations should contains the fee farm address.
 ```bash
 bun run src/lock_liquidity_for_m3m3.ts --config ./config/create_m3m3_farm.json
 ```
 
-Create the M3M3 fee farm
+**Create the M3M3 fee farm**
 ```bash
 bun run src/create_m3m3_farm.ts --config ./config/create_m3m3_farm.json
 ```
 
-** Set DLMM pool status**
+**Set DLMM pool status**
 ```bash
 bun run src/set_dlmm_pool_status.ts --config ./config/set_dlmm_pool_status.json
 ```
 
-** Create alpha vault with Permission with authority whitelist mode**
+**Create alpha vault with Permission with authority whitelist mode**
 ```bash
 bun run src/create_alpha_vault.ts --config ./config/create_dynamic_amm_pool_with_permissioned_authority_vault.json
 ```
