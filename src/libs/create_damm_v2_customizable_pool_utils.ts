@@ -11,7 +11,8 @@ import {
 	getQuoteDecimals,
 	runSimulateTransaction,
 	modifyComputeUnitPriceIx,
-	getDammV2ActivationType
+	getDammV2ActivationType,
+	getDecimalizedAmount
 } from "../"
 import { Wallet, BN } from "@coral-xyz/anchor"
 import { getMint, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token"
@@ -145,7 +146,7 @@ export async function createDammV2CustomizablePool(
 					maxSqrtPrice,
 					sqrtPrice: initPriceInQ64,
 					inputTokenInfo: null,
-					outputTokenInfo: tokenAAmount
+					outputTokenInfo: baseTokenInfo
 				})
 			liquidityDelta = liquidity
 			tokenAAmount = outputAmount
@@ -178,22 +179,30 @@ export async function createDammV2CustomizablePool(
 		)
 	}
 
-	console.log(`- Using token A amount ${config.dynamicAmmV2.baseAmount}`)
-	console.log(`- Using token B amount ${config.dynamicAmmV2.quoteAmount ?? 0}`)
+	console.log(
+		`- Using base token with amount = ${getDecimalizedAmount(tokenAAmount, baseDecimals)}, in lamport = ${tokenAAmount}`
+	)
+	console.log(
+		`- Using quote token with amount = ${getDecimalizedAmount(tokenBAmount, quoteDecimals)}, in lamport = ${tokenBAmount}`
+	)
 	console.log(
 		`- Init price ${getPriceFromSqrtPrice(initPriceInQ64, baseDecimals, quoteDecimals)}`
 	)
 
 	const activationType = getDammV2ActivationType(config.dynamicAmmV2.activationType)
+	const hasDynamicConfig = config.dynamicAmmV2.dynamicFee
 	const dynamicFeeConfig = {
 		binStep: 1,
 		binStepU128: new BN("1844674407370955"),
-		filterPeriod: config.dynamicAmmV2.dynamicFee.filterPeriod ?? 10,
-		decayPeriod: config.dynamicAmmV2.dynamicFee.decayPeriod ?? 120,
-		reductionFactor: config.dynamicAmmV2.dynamicFee.reductionFactor ?? 5000,
-		variableFeeControl: config.dynamicAmmV2.dynamicFee.variableFeeControl ?? 2000000,
-		maxVolatilityAccumulator:
-			config.dynamicAmmV2.dynamicFee.maxVolatilityAccumulator ?? 100000
+		filterPeriod: hasDynamicConfig ? hasDynamicConfig.filterPeriod : 10,
+		decayPeriod: hasDynamicConfig ? hasDynamicConfig.decayPeriod : 120,
+		reductionFactor: hasDynamicConfig ? hasDynamicConfig.reductionFactor : 5000,
+		variableFeeControl: hasDynamicConfig
+			? hasDynamicConfig.variableFeeControl
+			: 2000000,
+		maxVolatilityAccumulator: hasDynamicConfig
+			? hasDynamicConfig.maxVolatilityAccumulator
+			: 100000
 	}
 	const baseFee: BaseFee = {
 		cliffFeeNumerator: new BN(config.dynamicAmmV2.cliffFeeNumerator),
