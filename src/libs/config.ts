@@ -1,3 +1,4 @@
+import { CollectFeeMode, FeeSchedulerMode } from "@meteora-ag/cp-amm-sdk"
 import {
 	extraConfigValidation,
 	parseCliArguments,
@@ -76,6 +77,101 @@ const CONFIG_SCHEMA: JSONSchemaType<MeteoraConfig> = {
 				"tradeFeeNumerator",
 				"activationType",
 				"hasAlphaVault"
+			],
+			additionalProperties: false
+		},
+		dynamicAmmV2: {
+			type: "object",
+			nullable: true,
+			properties: {
+				creator: {
+					type: "string",
+					nullable: false
+				},
+				baseAmount: {
+					anyOf: [{ type: "number" }, { type: "string" }, { type: "null" }]
+				},
+				quoteAmount: {
+					anyOf: [{ type: "number" }, { type: "string" }, { type: "null" }]
+				},
+				cliffFeeNumerator: {
+					type: "number"
+				},
+				numberOfPeriod: {
+					type: "number"
+				},
+				periodFrequency: {
+					type: "number"
+				},
+				reductionFactor: {
+					type: "number"
+				},
+				feeSchedulerMode: {
+					type: "number",
+					enum: [0, 1]
+				},
+				collectFeeMode: {
+					type: "number",
+					enum: [0, 1]
+				},
+				initPrice: {
+					type: "string",
+					nullable: true
+				},
+				createPoolSingleSide: {
+					type: "boolean"
+				},
+				minSqrtPrice: {
+					type: "string",
+					nullable: true
+				},
+				maxSqrtPrice: {
+					type: "string",
+					nullable: true
+				},
+				activationType: {
+					type: "string",
+					enum: ["slot", "timestamp"]
+				},
+				activationPoint: {
+					type: "number",
+					nullable: true
+				},
+				hasAlphaVault: {
+					type: "boolean"
+				},
+				useDynamicFee: {
+					type: "boolean"
+				},
+				dynamicFee: {
+					type: "object",
+					nullable: true,
+					properties: {
+						filterPeriod: {
+							type: "number"
+						},
+						decayPeriod: {
+							type: "number"
+						},
+						reductionFactor: {
+							type: "number"
+						},
+						variableFeeControl: {
+							type: "number"
+						},
+						maxVolatilityAccumulator: {
+							type: "number"
+						}
+					}
+				}
+			},
+			required: [
+				"cliffFeeNumerator",
+				"activationType",
+				"hasAlphaVault",
+				"collectFeeMode",
+				"periodFrequency",
+				"useDynamicFee"
 			],
 			additionalProperties: false
 		},
@@ -281,6 +377,7 @@ export interface MeteoraConfig {
 	quoteSymbol?: string
 	quoteMint?: string
 	dynamicAmm: DynamicAmmConfig | null
+	dynamicAmmV2: DynamicAmmV2Config | null
 	dlmm: DlmmConfig | null
 	alphaVault: FcfsAlphaVaultConfig | ProrataAlphaVaultConfig | null
 	lockLiquidity: LockLiquidityConfig | null
@@ -302,6 +399,35 @@ export interface DynamicAmmConfig {
 	activationType: ActivationTypeConfig
 	activationPoint: number | null
 	hasAlphaVault: boolean
+}
+
+export interface DynamicAmmV2Config {
+	creator: string
+	baseAmount: number | string | null
+	quoteAmount: number | string | null
+	cliffFeeNumerator: number
+	numberOfPeriod: number
+	periodFrequency: number
+	reductionFactor: number
+	feeSchedulerMode: number
+	collectFeeMode: number
+	initPrice: string | null
+	createPoolSingleSide: boolean
+	minSqrtPrice: string | null
+	maxSqrtPrice: string | null
+	activationType: ActivationTypeConfig
+	activationPoint: number | null
+	hasAlphaVault: boolean
+	useDynamicFee: boolean
+	dynamicFee: DynamicFee | null
+}
+
+export interface DynamicFee {
+	filterPeriod: number
+	decayPeriod: number
+	reductionFactor: number
+	variableFeeControl: number
+	maxVolatilityAccumulator: number
 }
 
 export interface DlmmConfig {

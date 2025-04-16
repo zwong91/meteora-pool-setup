@@ -6,12 +6,8 @@ import {
 	safeParseKeypairFromFile,
 	parseConfigFromCli
 } from "."
-import { AnchorProvider, Wallet } from "@coral-xyz/anchor"
+import { Wallet } from "@coral-xyz/anchor"
 import { createTokenMint } from "./libs/create_token_mint"
-import {
-	createPermissionlessDlmmPool,
-	createPermissionlessDynamicPool
-} from "./libs/create_pool_utils"
 import { createDammV2CustomizablePool } from "./libs/create_damm_v2_customizable_pool_utils"
 
 async function main() {
@@ -50,23 +46,7 @@ async function main() {
 	console.log(`- Using quote token mint ${quoteMint.toString()}`)
 
 	/// --------------------------------------------------------------------------
-	if (config.dynamicAmm && !config.dlmm) {
-		await createPermissionlessDynamicPool(
-			config,
-			connection,
-			wallet,
-			baseMint,
-			quoteMint
-		)
-	} else if (config.dlmm && !config.dynamicAmm) {
-		await createPermissionlessDlmmPool(
-			config,
-			connection,
-			wallet,
-			baseMint,
-			quoteMint
-		)
-	} else if (!config.dynamicAmm && !config.dlmm && config.dynamicAmmV2) {
+	if (config.dynamicAmmV2) {
 		await createDammV2CustomizablePool(
 			config,
 			connection,
@@ -74,10 +54,8 @@ async function main() {
 			baseMint,
 			quoteMint
 		)
-	} else if (!config.dynamicAmm && !config.dynamicAmm && !config.dlmm) {
-		throw new Error("Either provide only Dynamic AMM V1,2 and DLMM configuration")
 	} else {
-		throw new Error("Must provide Dynamic AMM or DLMM configuration")
+		throw new Error("Must provide Dynamic V2 configuration")
 	}
 }
 
