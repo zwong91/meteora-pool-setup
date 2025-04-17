@@ -91,43 +91,57 @@ const CONFIG_SCHEMA: JSONSchemaType<MeteoraConfig> = {
 				baseAmount: {
 					anyOf: [{ type: "number" }, { type: "string" }, { type: "null" }]
 				},
-				quoteAmount: {
+				initPrice: {
 					anyOf: [{ type: "number" }, { type: "string" }, { type: "null" }]
 				},
-				cliffFeeNumerator: {
-					type: "number"
+				maxPrice: {
+					anyOf: [{ type: "number" }, { type: "string" }, { type: "null" }]
 				},
-				numberOfPeriod: {
-					type: "number"
-				},
-				periodFrequency: {
-					type: "number"
-				},
-				reductionFactor: {
-					type: "number"
-				},
-				feeSchedulerMode: {
-					type: "number",
-					enum: [0, 1]
+				poolFees: {
+					feeBps: {
+						type: "number"
+					},
+					numberOfPeriod: {
+						type: "number"
+					},
+					periodFrequency: {
+						type: "number"
+					},
+					reductionFactor: {
+						type: "number"
+					},
+					feeSchedulerMode: {
+						type: "number",
+						enum: [0, 1]
+					},
+					useDynamicFee: {
+						type: "boolean"
+					},
+					dynamicFeeConfig: {
+						type: "object",
+						nullable: true,
+						properties: {
+							filterPeriod: {
+								type: "number"
+							},
+							decayPeriod: {
+								type: "number"
+							},
+							reductionFactor: {
+								type: "number"
+							},
+							variableFeeControl: {
+								type: "number"
+							},
+							maxVolatilityAccumulator: {
+								type: "number"
+							}
+						}
+					}
 				},
 				collectFeeMode: {
 					type: "number",
 					enum: [0, 1]
-				},
-				initPrice: {
-					type: "string",
-					nullable: true
-				},
-				createPoolSingleSide: {
-					type: "boolean"
-				},
-				minSqrtPrice: {
-					type: "string",
-					nullable: true
-				},
-				maxSqrtPrice: {
-					type: "string",
-					nullable: true
 				},
 				activationType: {
 					type: "string",
@@ -139,40 +153,9 @@ const CONFIG_SCHEMA: JSONSchemaType<MeteoraConfig> = {
 				},
 				hasAlphaVault: {
 					type: "boolean"
-				},
-				useDynamicFee: {
-					type: "boolean"
-				},
-				dynamicFee: {
-					type: "object",
-					nullable: true,
-					properties: {
-						filterPeriod: {
-							type: "number"
-						},
-						decayPeriod: {
-							type: "number"
-						},
-						reductionFactor: {
-							type: "number"
-						},
-						variableFeeControl: {
-							type: "number"
-						},
-						maxVolatilityAccumulator: {
-							type: "number"
-						}
-					}
 				}
 			},
-			required: [
-				"cliffFeeNumerator",
-				"activationType",
-				"hasAlphaVault",
-				"collectFeeMode",
-				"periodFrequency",
-				"useDynamicFee"
-			],
+			required: ["activationType", "hasAlphaVault", "collectFeeMode", "poolFees"],
 			additionalProperties: false
 		},
 		dlmm: {
@@ -403,23 +386,22 @@ export interface DynamicAmmConfig {
 
 export interface DynamicAmmV2Config {
 	creator: string
-	baseAmount: number | string | null
-	quoteAmount: number | string | null
-	cliffFeeNumerator: number
-	numberOfPeriod: number
-	periodFrequency: number
-	reductionFactor: number
-	feeSchedulerMode: number
+	baseAmount: number | string
+	initPrice: number | string | null
+	maxPrice: number | string | null
+	poolFees: {
+		feeBps: number
+		numberOfPeriod: number
+		periodFrequency: number
+		reductionFactor: number
+		feeSchedulerMode: number
+		useDynamicFee: boolean
+		dynamicFeeConfig: DynamicFee | null
+	}
 	collectFeeMode: number
-	initPrice: string | null
-	createPoolSingleSide: boolean
-	minSqrtPrice: string | null
-	maxSqrtPrice: string | null
 	activationType: ActivationTypeConfig
 	activationPoint: number | null
 	hasAlphaVault: boolean
-	useDynamicFee: boolean
-	dynamicFee: DynamicFee | null
 }
 
 export interface DynamicFee {
