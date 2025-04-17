@@ -62,24 +62,22 @@ Also we need to provide the keypair for the payer wallet in `keypair.json` file.
 
 ### Dynamic AMM V2 configuration
 - `baseAmount`: Base token amount.
-- `quoteAmount`: Quote token amount.
-- `cliffFeeNumerator`: Cliff fee numerator at the cliff point, with fee denominator is set to `1_000_000_000`.
-- `numberOfPeriod`: Number of periods for fee reduction schedule
-- `periodFrequency`: Frequency of each period (in slots or seconds based on activation type). if `periodFrequency == 0` the `FeeScheduler` will not be set up.
-- `reductionFactor`: Factor for reducing fees across periods
-- `feeSchedulerMode`: Fee scheduler mode (0 = linear, 1 = exponential)
+- `initPrice`: Initial price for the pool (min price in price range)
+- `maxPrice`: Max price range setup (null to use default)
+- `poolFees`:
+    - `feeBps`: Fee bps with fee denominator: `1_000_000_000`, basis point max: 10_000. Example: feeBps = 25 (0.25%) => fee numerator = 2_500_000.
+    - `numberOfPeriod`: Number of periods for fee reduction schedule
+    - `periodFrequency`: Frequency of each period (in slots or seconds based on activation type). if `periodFrequency == 0` the `FeeScheduler` will not be set up.
+    - `reductionFactor`: Factor for reducing fees across periods
+    - `feeSchedulerMode`: Fee scheduler mode (0 = linear, 1 = exponential)
+    - `useDynamicFee`: Whether to use dynamic fee calculation based on price volatility (true/false)
+    - `dynamicFeeConfig`: Configuration when useDynamicFee is true if not provide will use as default params in scripts
+        - `filterPeriod`: Period for filtering price updates
+        - `decayPeriod`: Period for decaying volatility accumulator
+        - `reductionFactor`: Factor for reducing the volatility impact
+        - `variableFeeControl`: Parameter controlling the variable fee response
+        - `maxVolatilityAccumulator`: Maximum value for the volatility accumulator
 - `collectFeeMode`: Fee collection mode (0 = base + quote, 1 = only quote)
-- `initPrice`: Initial price for the pool (can be null in case providing both base amount and quote amount then initSqrtPrice will calculate inside script)
-- `createPoolSingleSide`: Whether to create the pool with only one token side (true/false). Currently, Support deposit base only.
-- `minSqrtPrice`: Min price range setup (null to use default)
-- `maxSqrtPrice`: Max price range setup (null to use default)
-- `useDynamicFee`: Whether to use dynamic fee calculation based on price volatility (true/false)
-- `dynamicFee`: Configuration when useDynamicFee is true if not provide will use as default params in scripts
-    - `filterPeriod`: Period for filtering price updates
-    - `decayPeriod`: Period for decaying volatility accumulator
-    - `reductionFactor`: Factor for reducing the volatility impact
-    - `variableFeeControl`: Parameter controlling the variable fee response
-    - `maxVolatilityAccumulator`: Maximum value for the volatility accumulator
 - `activationType`: To activate pool trading base on `slot` or `timestamp`.
 - `activationPoint`: To activate pool trading at a point, either slot value or timestamp value base on `activationType`.
 - `hasAlphaVault`: Whether alpha vault is enabled or not for this pool.
