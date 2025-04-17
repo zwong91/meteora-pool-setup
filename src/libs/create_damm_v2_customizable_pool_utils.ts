@@ -18,13 +18,20 @@ import { Wallet, BN } from "@coral-xyz/anchor"
 import { getMint, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token"
 import {
 	BaseFee,
+	BASIS_POINT_MAX,
 	CpAmm,
+	FEE_DENOMINATOR,
 	getPriceFromSqrtPrice,
 	getSqrtPriceFromPrice,
 	MAX_SQRT_PRICE,
 	MIN_SQRT_PRICE,
 	PoolFeesParams
 } from "@meteora-ag/cp-amm-sdk"
+
+// convert to BPS
+function bpsToFeeNumerator(bps: number) {
+	return (bps * FEE_DENOMINATOR) / BASIS_POINT_MAX
+}
 
 export async function createDammV2CustomizablePool(
 	config: MeteoraConfig,
@@ -75,150 +82,95 @@ export async function createDammV2CustomizablePool(
 
 	// create cp amm instance
 	const cpAmmInstance = new CpAmm(connection)
+	const {
+		initPrice,
+		maxPrice,
+		poolFees,
+		baseAmount,
+		hasAlphaVault,
+		activationPoint,
+		activationType,
+		collectFeeMode
+	} = config.dynamicAmmV2
+
+	const {
+		feeSchedulerMode,
+		reductionFactor,
+		periodFrequency,
+		numberOfPeriod,
+		feeBps,
+		useDynamicFee
+	} = poolFees
 	// setup pool params
-	const minSqrtPrice = config.dynamicAmmV2.minSqrtPrice
-		? new BN(config.dynamicAmmV2.minSqrtPrice)
+	const initSqrtPrice = initPrice
+		? getSqrtPriceFromPrice(initPrice.toString(), baseDecimals, quoteDecimals)
 		: MIN_SQRT_PRICE
-	const maxSqrtPrice = config.dynamicAmmV2.maxSqrtPrice
-		? new BN(config.dynamicAmmV2.maxSqrtPrice)
+	const maxSqrtPrice = maxPrice
+		? getSqrtPriceFromPrice(maxPrice.toString(), baseDecimals, quoteDecimals)
 		: MAX_SQRT_PRICE
 
-	if (minSqrtPrice.gte(maxSqrtPrice)) {
+	if (
+		initSqrtPrice.gte(maxSqrtPrice) &&
+		initSqrtPrice.gte(MIN_SQRT_PRICE) &&
+		maxSqrtPrice.lte(MAX_SQRT_PRICE)
+	) {
 		throw new Error("Invalid price range")
 	}
 
-	let liquidityDelta: BN
-	let initPriceInQ64: BN
-	let tokenAAmount: BN
-	let tokenBAmount: BN
-	if (config.dynamicAmmV2.createPoolSingleSide) {
-		if (config.dynamicAmmV2.baseAmount) {
-			tokenAAmount = getAmountInLamports(
-				config.dynamicAmmV2.baseAmount,
-				baseDecimals
-			)
-			tokenBAmount = new BN(0)
-			liquidityDelta = cpAmmInstance.preparePoolCreationSingleSide({
-				tokenAAmount,
-				minSqrtPrice,
-				maxSqrtPrice,
-				initSqrtPrice: minSqrtPrice, // single side deposit base only
-				tokenAInfo: baseTokenInfo
-			})
-			initPriceInQ64 = minSqrtPrice
-		} else {
-			throw new Error("Invalid create pool single side, must provide base Amount")
-		}
-	} else if (config.dynamicAmmV2.initPrice) {
-		initPriceInQ64 = getSqrtPriceFromPrice(
-			config.dynamicAmmV2.initPrice,
-			baseDecimals,
-			quoteDecimals
-		)
-		if (config.dynamicAmmV2.baseAmount) {
-			tokenAAmount = getAmountInLamports(
-				config.dynamicAmmV2.baseAmount,
-				baseDecimals
-			)
-
-			const { liquidityDelta: liquidity, outputAmount } =
-				await cpAmmInstance.getDepositQuote({
-					inAmount: tokenAAmount,
-					isTokenA: true,
-					minSqrtPrice,
-					maxSqrtPrice,
-					sqrtPrice: initPriceInQ64,
-					inputTokenInfo: baseTokenInfo,
-					outputTokenInfo: null
-				})
-			liquidityDelta = liquidity
-			tokenBAmount = outputAmount
-		} else if (config.dynamicAmmV2.quoteAmount) {
-			tokenBAmount = getAmountInLamports(
-				config.dynamicAmmV2.quoteAmount,
-				quoteDecimals
-			)
-
-			const { liquidityDelta: liquidity, outputAmount } =
-				await cpAmmInstance.getDepositQuote({
-					inAmount: tokenBAmount,
-					isTokenA: false,
-					minSqrtPrice,
-					maxSqrtPrice,
-					sqrtPrice: initPriceInQ64,
-					inputTokenInfo: null,
-					outputTokenInfo: baseTokenInfo
-				})
-			liquidityDelta = liquidity
-			tokenAAmount = outputAmount
-		} else {
-			throw new Error("Must provide either baseAmount or quoteAmount with initPrice")
-		}
-	} else if (config.dynamicAmmV2.baseAmount && config.dynamicAmmV2.quoteAmount) {
-		tokenAAmount = getAmountInLamports(config.dynamicAmmV2.baseAmount, baseDecimals)
-		tokenBAmount = getAmountInLamports(
-			config.dynamicAmmV2.quoteAmount,
-			quoteDecimals
-		)
-
-		const { initSqrtPrice, liquidityDelta: liquidity } =
-			cpAmmInstance.preparePoolCreationParams({
-				tokenAAmount,
-				tokenBAmount,
-				minSqrtPrice,
-				maxSqrtPrice,
-				tokenADecimal: baseDecimals,
-				tokenBDecimal: quoteDecimals,
-				tokenAInfo: baseTokenInfo,
-				tokenBInfo: null
-			})
-		initPriceInQ64 = initSqrtPrice
-		liquidityDelta = liquidity
-	} else {
-		throw new Error(
-			"Must provide: 1) baseAmount for single-side, 2) initPrice with either token, or 3) both tokens"
-		)
-	}
+	const tokenAAmount = getAmountInLamports(baseAmount, baseDecimals)
+	const tokenBAmount = new BN(0)
+	const liquidityDelta = cpAmmInstance.preparePoolCreationSingleSide({
+		tokenAAmount,
+		minSqrtPrice: initSqrtPrice,
+		maxSqrtPrice,
+		initSqrtPrice,
+		tokenAInfo: baseTokenInfo
+	})
 
 	console.log(
-		`- Using base token with amount = ${getDecimalizedAmount(tokenAAmount, baseDecimals)}, in lamport = ${tokenAAmount}`
+		`- Using base token with amount = ${getDecimalizedAmount(tokenAAmount, baseDecimals)}`
 	)
 	console.log(
-		`- Using quote token with amount = ${config.dynamicAmmV2.createPoolSingleSide ? 0 : getDecimalizedAmount(tokenBAmount, quoteDecimals)}, in lamport = ${tokenBAmount}`
-	)
-	console.log(
-		`- Init price ${getPriceFromSqrtPrice(initPriceInQ64, baseDecimals, quoteDecimals)}`
+		`- Init price ${getPriceFromSqrtPrice(initSqrtPrice, baseDecimals, quoteDecimals)}`
 	)
 
-	const activationType = getDammV2ActivationType(config.dynamicAmmV2.activationType)
-	const hasDynamicConfig = config.dynamicAmmV2.dynamicFee
-	const dynamicFeeConfig = {
+	console.log(
+		`- Price range [${initPrice}, ${getPriceFromSqrtPrice(maxSqrtPrice, baseDecimals, quoteDecimals)}]`
+	)
+
+	const activationTypeValue = getDammV2ActivationType(activationType)
+	const dynamicFeeConfig = config.dynamicAmmV2.poolFees.dynamicFeeConfig
+
+	const dynamicFeeParams = {
 		binStep: 1,
 		binStepU128: new BN("1844674407370955"),
-		filterPeriod: hasDynamicConfig ? hasDynamicConfig.filterPeriod : 10,
-		decayPeriod: hasDynamicConfig ? hasDynamicConfig.decayPeriod : 120,
-		reductionFactor: hasDynamicConfig ? hasDynamicConfig.reductionFactor : 5000,
-		variableFeeControl: hasDynamicConfig
-			? hasDynamicConfig.variableFeeControl
+		filterPeriod: dynamicFeeConfig ? dynamicFeeConfig.filterPeriod : 10,
+		decayPeriod: dynamicFeeConfig ? dynamicFeeConfig.decayPeriod : 120,
+		reductionFactor: dynamicFeeConfig ? dynamicFeeConfig.reductionFactor : 5000,
+		variableFeeControl: dynamicFeeConfig
+			? dynamicFeeConfig.variableFeeControl
 			: 2000000,
-		maxVolatilityAccumulator: hasDynamicConfig
-			? hasDynamicConfig.maxVolatilityAccumulator
+		maxVolatilityAccumulator: dynamicFeeConfig
+			? dynamicFeeConfig.maxVolatilityAccumulator
 			: 100000
 	}
+
+	const feeNumerator = bpsToFeeNumerator(feeBps)
+
 	const baseFee: BaseFee = {
-		cliffFeeNumerator: new BN(config.dynamicAmmV2.cliffFeeNumerator),
-		numberOfPeriod: config.dynamicAmmV2.numberOfPeriod,
-		periodFrequency: new BN(config.dynamicAmmV2.periodFrequency),
-		reductionFactor: new BN(config.dynamicAmmV2.reductionFactor),
-		feeSchedulerMode: config.dynamicAmmV2.feeSchedulerMode
+		cliffFeeNumerator: new BN(feeNumerator),
+		numberOfPeriod: numberOfPeriod,
+		periodFrequency: new BN(periodFrequency),
+		reductionFactor: new BN(reductionFactor),
+		feeSchedulerMode: feeSchedulerMode
 	}
 
-	const poolFees: PoolFeesParams = {
+	const poolFeesParams: PoolFeesParams = {
 		baseFee,
 		protocolFeePercent: 20,
 		partnerFeePercent: 0,
 		referralFeePercent: 20,
-		dynamicFee: config.dynamicAmmV2.useDynamicFee ? dynamicFeeConfig : null
+		dynamicFee: useDynamicFee ? dynamicFeeParams : null
 	}
 	const positionNft = Keypair.generate()
 
@@ -234,17 +186,15 @@ export async function createDammV2CustomizablePool(
 		tokenBMint: quoteTokenMint,
 		tokenAAmount: tokenAAmount,
 		tokenBAmount: tokenBAmount,
-		sqrtMinPrice: minSqrtPrice,
+		sqrtMinPrice: initSqrtPrice,
 		sqrtMaxPrice: maxSqrtPrice,
 		liquidityDelta: liquidityDelta,
-		initSqrtPrice: initPriceInQ64,
-		poolFees: poolFees,
-		hasAlphaVault: config.dynamicAmmV2.hasAlphaVault,
-		activationType: activationType,
-		collectFeeMode: config.dynamicAmmV2.collectFeeMode,
-		activationPoint: config.dynamicAmmV2.activationPoint
-			? new BN(config.dynamicAmmV2.activationPoint)
-			: null,
+		initSqrtPrice,
+		poolFees: poolFeesParams,
+		hasAlphaVault: hasAlphaVault,
+		activationType: activationTypeValue,
+		collectFeeMode: collectFeeMode,
+		activationPoint: activationPoint ? new BN(activationPoint) : null,
 		tokenAProgram: baseTokenProgram,
 		tokenBProgram: TOKEN_PROGRAM_ID
 	})

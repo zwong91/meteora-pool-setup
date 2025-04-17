@@ -16,7 +16,7 @@
             "periodFrequency": 0,
             "reductionFactor": 0,
             "feeSchedulerMode": 0,
-            "useDynamicFee": false,
+            "useDynamicFee": true,
             "dynamicFeeConfig": null
         },
         "hasAlphaVault": false,
