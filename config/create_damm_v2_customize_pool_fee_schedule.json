@@ -11,10 +11,10 @@
         "initPrice": 10,
         "maxPrice": null,
         "poolFees": {
-            "feeBps": 25,
-            "numberOfPeriod": 0,
-            "periodFrequency": 0,
-            "reductionFactor": 0,
+            "initialBaseFeeBps": 5000,
+            "finalBaseFeeBps": 100,
+            "numberOfPeriod": 10,
+            "periodFrequency": 60,
             "feeSchedulerMode": 0,
             "useDynamicFee": false,
             "dynamicFeeConfig": null
