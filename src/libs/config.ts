@@ -98,16 +98,17 @@ const CONFIG_SCHEMA: JSONSchemaType<MeteoraConfig> = {
 					anyOf: [{ type: "number" }, { type: "string" }, { type: "null" }]
 				},
 				poolFees: {
-					feeBps: {
+					initialBaseFeeBps: {
 						type: "number"
+					},
+					finalBaseFeeBps: {
+						type: "number",
+						nullable: true
 					},
 					numberOfPeriod: {
 						type: "number"
 					},
 					periodFrequency: {
-						type: "number"
-					},
-					reductionFactor: {
 						type: "number"
 					},
 					feeSchedulerMode: {
@@ -390,10 +391,10 @@ export interface DynamicAmmV2Config {
 	initPrice: number | string | null
 	maxPrice: number | string | null
 	poolFees: {
-		feeBps: number
+		initialBaseFeeBps: number
+		finalBaseFeeBps: number
 		numberOfPeriod: number
 		periodFrequency: number
-		reductionFactor: number
 		feeSchedulerMode: number
 		useDynamicFee: boolean
 		dynamicFeeConfig: DynamicFee | null

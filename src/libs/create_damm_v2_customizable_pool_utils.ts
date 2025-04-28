@@ -20,7 +20,10 @@ import {
 	BaseFee,
 	BASIS_POINT_MAX,
 	CpAmm,
+	estimateExponentialReductionFactor,
+	estimateLinearReductionFactor,
 	FEE_DENOMINATOR,
+	FeeSchedulerMode,
 	getPriceFromSqrtPrice,
 	getSqrtPriceFromPrice,
 	MAX_SQRT_PRICE,
@@ -94,11 +97,11 @@ export async function createDammV2CustomizablePool(
 	} = config.dynamicAmmV2
 
 	const {
+		initialBaseFeeBps,
+		finalBaseFeeBps,
 		feeSchedulerMode,
-		reductionFactor,
 		periodFrequency,
 		numberOfPeriod,
-		feeBps,
 		useDynamicFee
 	} = poolFees
 	// setup pool params
@@ -155,7 +158,22 @@ export async function createDammV2CustomizablePool(
 			: 100000
 	}
 
-	const feeNumerator = bpsToFeeNumerator(feeBps)
+	const feeNumerator = bpsToFeeNumerator(initialBaseFeeBps)
+
+	const reductionFactor =
+		periodFrequency <= 0
+			? 0
+			: feeSchedulerMode === FeeSchedulerMode.Linear
+				? estimateLinearReductionFactor(
+						initialBaseFeeBps,
+						finalBaseFeeBps,
+						numberOfPeriod
+					)
+				: estimateExponentialReductionFactor(
+						initialBaseFeeBps,
+						finalBaseFeeBps,
+						numberOfPeriod
+					)
 
 	const baseFee: BaseFee = {
 		cliffFeeNumerator: new BN(feeNumerator),

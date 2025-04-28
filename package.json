@@ -14,7 +14,7 @@
     "@coral-xyz/anchor": "^0.28.0",
     "@mercurial-finance/dynamic-amm-sdk": "^1.1.19",
     "@meteora-ag/alpha-vault": "^1.1.8",
-    "@meteora-ag/cp-amm-sdk": "1.0.0-rc.2",
+    "@meteora-ag/cp-amm-sdk": "1.0.0-rc.7",
     "@meteora-ag/dlmm": "1.4.11",
     "@meteora-ag/m3m3": "^1.0.5",
     "@solana/spl-token": "^0.4.9",
