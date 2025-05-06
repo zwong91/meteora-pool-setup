@@ -1,5 +1,9 @@
 import { Keypair, PublicKey, sendAndConfirmTransaction } from "@solana/web3.js"
-import { DEFAULT_COMMITMENT_LEVEL, DEFAULT_SEND_TX_MAX_RETRIES, SOL_TOKEN_MINT } from "../libs/constants"
+import {
+	DEFAULT_COMMITMENT_LEVEL,
+	DEFAULT_SEND_TX_MAX_RETRIES,
+	SOL_TOKEN_MINT
+} from "../libs/constants"
 import { createPermissionlessDynamicPool, toAlphaVaulSdkPoolType } from "../index"
 import { web3 } from "@coral-xyz/anchor"
 import {
@@ -250,12 +254,15 @@ describe("Test create dynamic pool with permissioned authority fcfs alpha vault"
 				whitelistWallet_1.publicKey
 			)
 
-			const depositTxHash = await sendAndConfirmTransaction(connection, depositTx, [
-				whitelistWallet_1
-			], {
-				commitment: DEFAULT_COMMITMENT_LEVEL,
-				maxRetries: DEFAULT_SEND_TX_MAX_RETRIES
-			}).catch((e) => {
+			const depositTxHash = await sendAndConfirmTransaction(
+				connection,
+				depositTx,
+				[whitelistWallet_1],
+				{
+					commitment: DEFAULT_COMMITMENT_LEVEL,
+					maxRetries: DEFAULT_SEND_TX_MAX_RETRIES
+				}
+			).catch((e) => {
 				console.error(e)
 				throw e
 			})
@@ -275,12 +282,15 @@ describe("Test create dynamic pool with permissioned authority fcfs alpha vault"
 				whitelistWallet_1.publicKey
 			)
 
-			const depositTxHash = await sendAndConfirmTransaction(connection, depositTx, [
-				whitelistWallet_1
-			], {
-				commitment: DEFAULT_COMMITMENT_LEVEL,
-				maxRetries: DEFAULT_SEND_TX_MAX_RETRIES
-			}).catch((e) => {
+			const depositTxHash = await sendAndConfirmTransaction(
+				connection,
+				depositTx,
+				[whitelistWallet_1],
+				{
+					commitment: DEFAULT_COMMITMENT_LEVEL,
+					maxRetries: DEFAULT_SEND_TX_MAX_RETRIES
+				}
+			).catch((e) => {
 				console.error(e)
 				throw e
 			})

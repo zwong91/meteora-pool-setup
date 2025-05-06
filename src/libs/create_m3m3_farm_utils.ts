@@ -31,7 +31,10 @@ export async function create_m3m3_farm(
 	console.log(`- M3M3 fee vault ${m3m3VaultPubkey}`)
 
 	// 1. Create m3m3 farm
-	const m3m3VaultAccount = await connection.getAccountInfo(m3m3VaultPubkey, connection.commitment)
+	const m3m3VaultAccount = await connection.getAccountInfo(
+		m3m3VaultPubkey,
+		connection.commitment
+	)
 
 	if (m3m3VaultAccount) {
 		console.log(`>>> M3M3 farm is already existed. Skip creating new farm.`)
@@ -69,9 +72,7 @@ export async function create_m3m3_farm(
 		await runSimulateTransaction(connection, [payer], payer.publicKey, [createTx])
 	} else {
 		console.log(`>> Sending create m3m3 farm transaction...`)
-		const txHash = await sendAndConfirmTransaction(connection, createTx, [
-			payer
-		], {
+		const txHash = await sendAndConfirmTransaction(connection, createTx, [payer], {
 			commitment: connection.commitment,
 			maxRetries: DEFAULT_SEND_TX_MAX_RETRIES
 		}).catch((err) => {

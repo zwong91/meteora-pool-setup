@@ -20,7 +20,10 @@ import {
 	Transaction
 } from "@solana/web3.js"
 import { BN } from "bn.js"
-import { DEFAULT_COMMITMENT_LEVEL, DEFAULT_SEND_TX_MAX_RETRIES } from "../libs/constants"
+import {
+	DEFAULT_COMMITMENT_LEVEL,
+	DEFAULT_SEND_TX_MAX_RETRIES
+} from "../libs/constants"
 
 export const wrapSol = async (connection: Connection, amount: BN, user: Keypair) => {
 	const userAta = getAssociatedTokenAccount(NATIVE_MINT, user.publicKey)
@@ -52,7 +55,9 @@ export const airDropSol = async (
 			publicKey,
 			amount * LAMPORTS_PER_SOL
 		)
-		const latestBlockHash = await connection.getLatestBlockhash(connection.commitment)
+		const latestBlockHash = await connection.getLatestBlockhash(
+			connection.commitment
+		)
 		await connection.confirmTransaction(
 			{
 				blockhash: latestBlockHash.blockhash,

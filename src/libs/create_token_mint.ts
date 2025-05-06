@@ -11,7 +11,11 @@ import {
 	TransactionSignature,
 	sendAndConfirmTransaction
 } from "@solana/web3.js"
-import { DEFAULT_COMMITMENT_LEVEL, DEFAULT_SEND_TX_MAX_RETRIES, getAmountInLamports } from ".."
+import {
+	DEFAULT_COMMITMENT_LEVEL,
+	DEFAULT_SEND_TX_MAX_RETRIES,
+	getAmountInLamports
+} from ".."
 import { BN } from "bn.js"
 import {
 	MINT_SIZE,
@@ -68,7 +72,7 @@ async function createAndMintToken(
 		wallet.publicKey,
 		null,
 		mintDecimals,
-		computeUnitPriceMicroLamports,
+		computeUnitPriceMicroLamports
 	)
 	console.log(`Created token mint ${mint}`)
 
@@ -88,7 +92,7 @@ async function createAndMintToken(
 		wallet.publicKey,
 		mintAmountLamport,
 		[],
-		computeUnitPriceMicroLamports,
+		computeUnitPriceMicroLamports
 	)
 	console.log(`Minted ${mint} to wallet`)
 
@@ -133,15 +137,10 @@ async function createMintWithPriorityFee(
 		createInitializeMint2Tx
 	)
 
-	await sendAndConfirmTransaction(
-		connection,
-		transaction,
-		[payer, keypair],
-		{
-			commitment: connection.commitment,
-			maxRetries: DEFAULT_SEND_TX_MAX_RETRIES
-		}
-	)
+	await sendAndConfirmTransaction(connection, transaction, [payer, keypair], {
+		commitment: connection.commitment,
+		maxRetries: DEFAULT_SEND_TX_MAX_RETRIES
+	})
 
 	return keypair.publicKey
 }

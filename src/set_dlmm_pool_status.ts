@@ -41,9 +41,7 @@ async function main() {
 		await runSimulateTransaction(connection, [wallet.payer], wallet.publicKey, [tx])
 	} else {
 		console.log(`>> Sending set DLMM pool status transaction...`)
-		let txHash = await sendAndConfirmTransaction(connection, tx, [
-			wallet.payer
-		], {
+		let txHash = await sendAndConfirmTransaction(connection, tx, [wallet.payer], {
 			commitment: connection.commitment,
 			maxRetries: DEFAULT_SEND_TX_MAX_RETRIES
 		}).catch((e) => {

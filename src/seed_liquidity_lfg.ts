@@ -81,11 +81,11 @@ async function main() {
 	console.log(`- Using quote token mint ${quoteMint.toString()}`)
 
 	let poolKey: PublicKey
-		;[poolKey] = deriveCustomizablePermissionlessLbPair(
-			baseMint,
-			quoteMint,
-			new PublicKey(LBCLMM_PROGRAM_IDS["mainnet-beta"])
-		)
+	;[poolKey] = deriveCustomizablePermissionlessLbPair(
+		baseMint,
+		quoteMint,
+		new PublicKey(LBCLMM_PROGRAM_IDS["mainnet-beta"])
+	)
 	console.log(`- Using pool key ${poolKey.toString()}`)
 
 	if (!config.lfgSeedLiquidity) {

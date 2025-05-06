@@ -113,12 +113,15 @@ export async function createPermissionlessDynamicPool(
 		])
 	} else {
 		console.log(`>> Sending init pool transaction...`)
-		const initPoolTxHash = await sendAndConfirmTransaction(connection, initPoolTx, [
-			wallet.payer
-		], {
-			commitment: connection.commitment,
-			maxRetries: DEFAULT_SEND_TX_MAX_RETRIES
-		}).catch((err) => {
+		const initPoolTxHash = await sendAndConfirmTransaction(
+			connection,
+			initPoolTx,
+			[wallet.payer],
+			{
+				commitment: connection.commitment,
+				maxRetries: DEFAULT_SEND_TX_MAX_RETRIES
+			}
+		).catch((err) => {
 			console.error(err)
 			throw err
 		})
@@ -164,7 +167,10 @@ export async function createPermissionlessDlmmPool(
 		config.quoteSymbol,
 		config.quoteMint
 	)
-	const baseMintInfo = await connection.getAccountInfo(baseMint, connection.commitment)
+	const baseMintInfo = await connection.getAccountInfo(
+		baseMint,
+		connection.commitment
+	)
 	const baseMintAccount = await getMint(
 		connection,
 		baseMint,
@@ -208,11 +214,11 @@ export async function createPermissionlessDlmmPool(
 	modifyComputeUnitPriceIx(initPoolTx, config.computeUnitPriceMicroLamports)
 
 	let poolKey: PublicKey
-		;[poolKey] = deriveCustomizablePermissionlessLbPair(
-			baseMint,
-			quoteMint,
-			dlmmProgramId
-		)
+	;[poolKey] = deriveCustomizablePermissionlessLbPair(
+		baseMint,
+		quoteMint,
+		dlmmProgramId
+	)
 
 	console.log(`\n> Pool address: ${poolKey}`)
 
@@ -223,12 +229,15 @@ export async function createPermissionlessDlmmPool(
 		])
 	} else {
 		console.log(`>> Sending init pool transaction...`)
-		let initPoolTxHash = await sendAndConfirmTransaction(connection, initPoolTx, [
-			wallet.payer
-		], {
-			commitment: connection.commitment,
-			maxRetries: DEFAULT_SEND_TX_MAX_RETRIES
-		}).catch((e) => {
+		let initPoolTxHash = await sendAndConfirmTransaction(
+			connection,
+			initPoolTx,
+			[wallet.payer],
+			{
+				commitment: connection.commitment,
+				maxRetries: DEFAULT_SEND_TX_MAX_RETRIES
+			}
+		).catch((e) => {
 			console.error(e)
 			throw e
 		})

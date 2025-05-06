@@ -276,7 +276,10 @@ export async function createPermissionedAlphaVaultWithAuthority(
 		alphaVaultProgramId
 	)
 
-	const alphaVaultAccountInfo = await connection.getAccountInfo(alphaVaultPubkey, connection.commitment)
+	const alphaVaultAccountInfo = await connection.getAccountInfo(
+		alphaVaultPubkey,
+		connection.commitment
+	)
 	if (!alphaVaultAccountInfo) {
 		// 1. Create alpha vault
 		if (alphaVaultType == AlphaVaultTypeConfig.Fcfs) {

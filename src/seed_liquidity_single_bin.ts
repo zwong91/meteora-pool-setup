@@ -44,7 +44,7 @@ async function main() {
 	console.log(`- Using quote token mint ${quoteMint.toString()}`)
 
 	let poolKey: PublicKey
-	[poolKey] = deriveCustomizablePermissionlessLbPair(
+	;[poolKey] = deriveCustomizablePermissionlessLbPair(
 		baseMint,
 		quoteMint,
 		DLMM_PROGRAM_ID

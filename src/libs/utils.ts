@@ -220,7 +220,9 @@ export async function runSimulateTransaction(
 	feePayer: PublicKey,
 	txs: Array<Transaction>
 ) {
-	const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash(connection.commitment)
+	const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash(
+		connection.commitment
+	)
 
 	const transaction = new Transaction({
 		blockhash,
@@ -228,7 +230,12 @@ export async function runSimulateTransaction(
 		feePayer
 	}).add(...txs)
 
-	let simulateResp = await simulateTransaction(connection, transaction, signers, connection.commitment)
+	let simulateResp = await simulateTransaction(
+		connection,
+		transaction,
+		signers,
+		connection.commitment
+	)
 	if (simulateResp.value.err) {
 		console.error(">>> Simulate transaction failed:", simulateResp.value.err)
 		console.log(`Logs ${simulateResp.value.logs}`)
@@ -328,8 +335,9 @@ export async function handleSendTxs(
 	const numTransactions = Math.ceil(instructions.length / instructionsPerTx)
 
 	for (let i = 0; i < numTransactions; i++) {
-		const { blockhash, lastValidBlockHeight } =
-			await connection.getLatestBlockhash(connection.commitment)
+		const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash(
+			connection.commitment
+		)
 		const setPriorityFeeIx = ComputeBudgetProgram.setComputeUnitPrice({
 			microLamports: computeUnitPriceMicroLamports
 		})
@@ -358,12 +366,10 @@ export async function handleSendTxs(
 			const txHash = await sendAndConfirmTransaction(connection, tx, [payer], {
 				commitment: connection.commitment,
 				maxRetries: DEFAULT_SEND_TX_MAX_RETRIES
-			}).catch(
-				(err) => {
-					console.error(err)
-					throw err
-				}
-			)
+			}).catch((err) => {
+				console.error(err)
+				throw err
+			})
 			console.log(
 				`>>> Transaction ${i + 1} ${label} successfully with tx hash: ${txHash}`
 			)

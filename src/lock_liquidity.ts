@@ -96,12 +96,15 @@ async function main() {
 				`\n> Simulating lock liquidty tx for address ${allocation.address} with amount = ${allocation.amount}... / percentage = ${allocation.percentage}`
 			)
 		} else {
-			const txHash = await sendAndConfirmTransaction(connection, tx, [
-				wallet.payer
-			], {
-				commitment: connection.commitment,
-				maxRetries: DEFAULT_SEND_TX_MAX_RETRIES
-			}).catch((err) => {
+			const txHash = await sendAndConfirmTransaction(
+				connection,
+				tx,
+				[wallet.payer],
+				{
+					commitment: connection.commitment,
+					maxRetries: DEFAULT_SEND_TX_MAX_RETRIES
+				}
+			).catch((err) => {
 				console.error(err)
 				throw err
 			})
