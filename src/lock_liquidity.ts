@@ -7,7 +7,8 @@ import {
 	safeParseKeypairFromFile,
 	parseConfigFromCli,
 	LockLiquidityAllocation,
-	modifyComputeUnitPriceIx
+	modifyComputeUnitPriceIx,
+	DEFAULT_SEND_TX_MAX_RETRIES
 } from "."
 import { AnchorProvider, Wallet } from "@coral-xyz/anchor"
 import { BN } from "bn.js"
@@ -71,7 +72,7 @@ async function main() {
 	)
 	const payerPoolLp = getAssociatedTokenAccount(lpMint, wallet.publicKey)
 	const payerPoolLpBalance = (
-		await provider.connection.getTokenAccountBalance(payerPoolLp)
+		await connection.getTokenAccountBalance(payerPoolLp, connection.commitment)
 	).value.amount
 	console.log("> payerPoolLpBalance %s", payerPoolLpBalance.toString())
 
@@ -97,7 +98,10 @@ async function main() {
 		} else {
 			const txHash = await sendAndConfirmTransaction(connection, tx, [
 				wallet.payer
-			]).catch((err) => {
+			], {
+				commitment: connection.commitment,
+				maxRetries: DEFAULT_SEND_TX_MAX_RETRIES
+			}).catch((err) => {
 				console.error(err)
 				throw err
 			})

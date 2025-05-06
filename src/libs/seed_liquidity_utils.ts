@@ -12,7 +12,7 @@ import { runSimulateTransaction } from "./utils"
 import { BN } from "bn.js"
 import DLMM, { deriveCustomizablePermissionlessLbPair } from "@meteora-ag/dlmm"
 
-import { DLMM_PROGRAM_IDS } from "./constants"
+import { connection.commitment, DEFAULT_SEND_TX_MAX_RETRIES, DLMM_PROGRAM_IDS } from "./constants"
 
 export async function seedLiquiditySingleBin(
 	connection: Connection,
@@ -43,11 +43,11 @@ export async function seedLiquiditySingleBin(
 	const dlmmProgramId = opts?.programId ?? new PublicKey(DLMM_PROGRAM_IDS[cluster])
 
 	let poolKey: PublicKey
-	;[poolKey] = deriveCustomizablePermissionlessLbPair(
-		baseMint,
-		quoteMint,
-		dlmmProgramId
-	)
+		;[poolKey] = deriveCustomizablePermissionlessLbPair(
+			baseMint,
+			quoteMint,
+			dlmmProgramId
+		)
 	console.log(`- Using pool key ${poolKey.toString()}`)
 
 	console.log(`- Using seedAmount in lamports = ${seedAmount}`)
@@ -84,7 +84,7 @@ export async function seedLiquiditySingleBin(
 	})
 
 	const { blockhash, lastValidBlockHeight } =
-		await connection.getLatestBlockhash("confirmed")
+		await connection.getLatestBlockhash(connection.commitment)
 
 	const tx = new Transaction({
 		feePayer: payerKeypair.publicKey,
@@ -108,7 +108,10 @@ export async function seedLiquiditySingleBin(
 			payerKeypair,
 			baseKeypair,
 			operatorKeypair
-		]).catch((err) => {
+		], {
+			commitment: connection.commitment,
+			maxRetries: DEFAULT_SEND_TX_MAX_RETRIES
+		}).catch((err) => {
 			console.error(err)
 			throw err
 		})
@@ -142,11 +145,11 @@ export async function seedLiquidityLfg(
 	const dlmmProgramId = opts?.programId ?? new PublicKey(DLMM_PROGRAM_IDS[cluster])
 
 	let poolKey: PublicKey
-	;[poolKey] = deriveCustomizablePermissionlessLbPair(
-		baseMint,
-		quoteMint,
-		dlmmProgramId
-	)
+		;[poolKey] = deriveCustomizablePermissionlessLbPair(
+			baseMint,
+			quoteMint,
+			dlmmProgramId
+		)
 	console.log(`- Using pool key ${poolKey.toString()}`)
 
 	console.log(`- Using seedAmount in lamports = ${seedAmount}`)
@@ -187,7 +190,7 @@ export async function seedLiquidityLfg(
 	if (sendPositionOwnerTokenProveIxs.length > 0) {
 		// run preflight ixs
 		const { blockhash, lastValidBlockHeight } =
-			await connection.getLatestBlockhash("confirmed")
+			await connection.getLatestBlockhash(connection.commitment)
 		const setCUPriceIx = ComputeBudgetProgram.setComputeUnitPrice({
 			microLamports: computeUnitPriceMicroLamports
 		})
@@ -210,7 +213,10 @@ export async function seedLiquidityLfg(
 		console.log(`>> Running preflight instructions...`)
 		try {
 			console.log(`>> Sending preflight transaction...`)
-			const txHash = await sendAndConfirmTransaction(connection, tx, signers)
+			const txHash = await sendAndConfirmTransaction(connection, tx, signers, {
+				commitment: connection.commitment,
+				maxRetries: DEFAULT_SEND_TX_MAX_RETRIES
+			})
 			console.log(`>>> Preflight successfully with tx hash: ${txHash}`)
 		} catch (err) {
 			console.error(err)
@@ -222,7 +228,7 @@ export async function seedLiquidityLfg(
 	// Initialize all bin array and position, transaction order can be in sequence or not
 	{
 		const { blockhash, lastValidBlockHeight } =
-			await connection.getLatestBlockhash("confirmed")
+			await connection.getLatestBlockhash(connection.commitment)
 
 		const transactions: Array<Promise<string>> = []
 
@@ -235,7 +241,10 @@ export async function seedLiquidityLfg(
 
 			const signers = [payerKeypair, baseKeypair, operatorKeypair]
 
-			transactions.push(sendAndConfirmTransaction(connection, tx, signers))
+			transactions.push(sendAndConfirmTransaction(connection, tx, signers, {
+				commitment: connection.commitment,
+				maxRetries: DEFAULT_SEND_TX_MAX_RETRIES
+			}))
 		}
 
 		await Promise.all(transactions)
@@ -252,7 +261,7 @@ export async function seedLiquidityLfg(
 	console.log(`>> Running addLiquidity instructions...`)
 	{
 		const { blockhash, lastValidBlockHeight } =
-			await connection.getLatestBlockhash("confirmed")
+			await connection.getLatestBlockhash(connection.commitment)
 
 		const transactions: Array<Promise<string>> = []
 
@@ -266,7 +275,10 @@ export async function seedLiquidityLfg(
 
 			const signers = [payerKeypair, operatorKeypair]
 
-			await sendAndConfirmTransaction(connection, tx, signers)
+			await sendAndConfirmTransaction(connection, tx, signers, {
+				commitment: connection.commitment,
+				maxRetries: DEFAULT_SEND_TX_MAX_RETRIES
+			})
 		}
 
 		// await Promise.all(transactions)

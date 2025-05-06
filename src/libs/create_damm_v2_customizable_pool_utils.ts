@@ -12,7 +12,8 @@ import {
 	runSimulateTransaction,
 	modifyComputeUnitPriceIx,
 	getDammV2ActivationType,
-	getDecimalizedAmount
+	getDecimalizedAmount,
+	DEFAULT_SEND_TX_MAX_RETRIES
 } from "../"
 import { Wallet, BN } from "@coral-xyz/anchor"
 import { getMint, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token"
@@ -56,7 +57,8 @@ export async function createDammV2CustomizablePool(
 	let baseTokenProgram = TOKEN_PROGRAM_ID
 
 	const baseMintAccountInfo = await connection.getAccountInfo(
-		new PublicKey(baseTokenMint)
+		new PublicKey(baseTokenMint),
+		connection.commitment
 	)
 
 	const baseMint = await getMint(
@@ -215,7 +217,11 @@ export async function createDammV2CustomizablePool(
 		const initPoolTxHash = await sendAndConfirmTransaction(
 			connection,
 			initCustomizePoolTx,
-			[wallet.payer, positionNft]
+			[wallet.payer, positionNft],
+			{
+				commitment: connection.commitment,
+				maxRetries: DEFAULT_SEND_TX_MAX_RETRIES
+			}
 		).catch((err) => {
 			console.error(err)
 			throw err

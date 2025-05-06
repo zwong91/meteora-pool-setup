@@ -11,7 +11,7 @@ import {
 	TransactionSignature,
 	sendAndConfirmTransaction
 } from "@solana/web3.js"
-import { DEFAULT_COMMITMENT_LEVEL, getAmountInLamports } from ".."
+import { DEFAULT_COMMITMENT_LEVEL, DEFAULT_SEND_TX_MAX_RETRIES, getAmountInLamports } from ".."
 import { BN } from "bn.js"
 import {
 	MINT_SIZE,
@@ -68,7 +68,7 @@ async function createAndMintToken(
 		wallet.publicKey,
 		null,
 		mintDecimals,
-		computeUnitPriceMicroLamports
+		computeUnitPriceMicroLamports,
 	)
 	console.log(`Created token mint ${mint}`)
 
@@ -77,7 +77,8 @@ async function createAndMintToken(
 		wallet.payer,
 		mint,
 		wallet.publicKey,
-		true
+		true,
+		connection.commitment
 	)
 	await mintToWithPriorityFee(
 		connection,
@@ -88,9 +89,6 @@ async function createAndMintToken(
 		mintAmountLamport,
 		[],
 		computeUnitPriceMicroLamports,
-		{
-			commitment: DEFAULT_COMMITMENT_LEVEL
-		}
 	)
 	console.log(`Minted ${mint} to wallet`)
 
@@ -105,7 +103,6 @@ async function createMintWithPriorityFee(
 	decimals: number,
 	computeUnitPriceMicroLamports: number,
 	keypair = Keypair.generate(),
-	confirmOptions?: ConfirmOptions,
 	programId = TOKEN_PROGRAM_ID
 ): Promise<PublicKey> {
 	const lamports = await getMinimumBalanceForRentExemptMint(connection)
@@ -140,7 +137,10 @@ async function createMintWithPriorityFee(
 		connection,
 		transaction,
 		[payer, keypair],
-		confirmOptions
+		{
+			commitment: connection.commitment,
+			maxRetries: DEFAULT_SEND_TX_MAX_RETRIES
+		}
 	)
 
 	return keypair.publicKey
@@ -155,7 +155,6 @@ async function mintToWithPriorityFee(
 	amount: number | bigint,
 	multiSigners: Signer[] = [],
 	computeUnitPriceMicroLamports: number,
-	confirmOptions?: ConfirmOptions,
 	programId = TOKEN_PROGRAM_ID
 ): Promise<TransactionSignature> {
 	const [authorityPublicKey, signers] = getSigners(authority, multiSigners)
@@ -180,7 +179,10 @@ async function mintToWithPriorityFee(
 		connection,
 		transaction,
 		[payer, ...signers],
-		confirmOptions
+		{
+			commitment: connection.commitment,
+			maxRetries: DEFAULT_SEND_TX_MAX_RETRIES
+		}
 	)
 }
 

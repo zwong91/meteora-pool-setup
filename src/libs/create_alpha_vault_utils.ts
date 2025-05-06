@@ -18,6 +18,7 @@ import {
 } from "@solana/web3.js"
 import {
 	ALPHA_VAULT_PROGRAM_IDS,
+	DEFAULT_SEND_TX_MAX_RETRIES,
 	MAX_INSTRUCTIONS_PER_STAKE_ESCROW_ACCOUNTS_CREATED
 } from "./constants"
 import { AnchorProvider, Program, Wallet } from "@coral-xyz/anchor"
@@ -129,7 +130,11 @@ export async function createFcfsAlphaVault(
 		const initAlphaVaulTxHash = await sendAndConfirmTransaction(
 			connection,
 			initAlphaVaultTx,
-			[wallet.payer]
+			[wallet.payer],
+			{
+				commitment: connection.commitment,
+				maxRetries: DEFAULT_SEND_TX_MAX_RETRIES
+			}
 		).catch((err) => {
 			console.error(err)
 			throw err
@@ -225,7 +230,11 @@ export async function createProrataAlphaVault(
 		const initAlphaVaulTxHash = await sendAndConfirmTransaction(
 			connection,
 			initAlphaVaultTx,
-			[wallet.payer]
+			[wallet.payer],
+			{
+				commitment: connection.commitment,
+				maxRetries: DEFAULT_SEND_TX_MAX_RETRIES
+			}
 		).catch((err) => {
 			console.error(err)
 			throw err
@@ -267,7 +276,7 @@ export async function createPermissionedAlphaVaultWithAuthority(
 		alphaVaultProgramId
 	)
 
-	const alphaVaultAccountInfo = await connection.getAccountInfo(alphaVaultPubkey)
+	const alphaVaultAccountInfo = await connection.getAccountInfo(alphaVaultPubkey, connection.commitment)
 	if (!alphaVaultAccountInfo) {
 		// 1. Create alpha vault
 		if (alphaVaultType == AlphaVaultTypeConfig.Fcfs) {

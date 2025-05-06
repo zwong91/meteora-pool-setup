@@ -5,7 +5,8 @@ import {
 	safeParseKeypairFromFile,
 	parseConfigFromCli,
 	modifyComputeUnitPriceIx,
-	runSimulateTransaction
+	runSimulateTransaction,
+	DEFAULT_SEND_TX_MAX_RETRIES
 } from "."
 import { Wallet } from "@coral-xyz/anchor"
 import DLMM from "@meteora-ag/dlmm"
@@ -42,7 +43,10 @@ async function main() {
 		console.log(`>> Sending set DLMM pool status transaction...`)
 		let txHash = await sendAndConfirmTransaction(connection, tx, [
 			wallet.payer
-		]).catch((e) => {
+		], {
+			commitment: connection.commitment,
+			maxRetries: DEFAULT_SEND_TX_MAX_RETRIES
+		}).catch((e) => {
 			console.error(e)
 			throw e
 		})

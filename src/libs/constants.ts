@@ -1,6 +1,8 @@
 import { PublicKey } from "@solana/web3.js"
 
-export const DEFAULT_COMMITMENT_LEVEL = "confirmed"
+export const DEFAULT_COMMITMENT_LEVEL = "confirmed";
+export const DEFAULT_SEND_TX_MAX_RETRIES = 3;
+
 export const SOL_TOKEN_MINT = new PublicKey(
 	"So11111111111111111111111111111111111111112"
 )
