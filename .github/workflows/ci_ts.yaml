@@ -13,7 +13,7 @@ on:
 env:
   SOLANA_CLI_VERSION: 1.16.3
   NODE_VERSION: 18.14.2
-  ANCHOR_CLI_VERSION: 0.28.0
+  ANCHOR_CLI_VERSION: 0.31.0
 
 jobs:
   sdk_changed_files:

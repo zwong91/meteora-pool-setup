@@ -33,7 +33,7 @@ Also we need to provide the keypair for the payer wallet in `keypair.json` file.
 ### General configuration
 - `rpcUrl`: Solana RPC URL to get data and send transactions.
 - `keypairFilePath`: Keypair file path to send transactions.
-- `dryRun`: Set to true to send transactions.
+- `dryRun`: Set to false to send transactions.
 - `computeUnitPriceMicroLamports`: CU price in micro lamports unit. For example: 100000.
 - `createBaseToken`: Configuration to create base token.
 - `baseMint`: Base token address if the `createBaseToken` field is not set. 
@@ -68,7 +68,7 @@ Also we need to provide the keypair for the payer wallet in `keypair.json` file.
     - `maxBaseFeeBps`: Starting fee in basis points (e.g., 25 = 0.25%). It is base fee if scheduler is not set.
     - `minBaseFeeBps`: Target fee after reduction periods. Should be equal `maxBaseFeeBps` when fee scheduler is not used.
     - `numberOfPeriod`: Number of periods for fee reduction schedule
-    - `periodFrequency`: Total duration of the fee schedule (in slots or seconds based on activation type). `totalDuration == 0` if the `FeeScheduler` not be set up.
+    - `totalDuration`: Total duration of the fee schedule (in slots or seconds based on activation type). `totalDuration == 0` if the `FeeScheduler` not be set up.
     - `feeSchedulerMode`: Fee scheduler mode (0 = linear, 1 = exponential)
     - `useDynamicFee`: Whether to use dynamic fee calculation based on price volatility (true/false)
     - `dynamicFeeConfig`: Configuration when useDynamicFee is true if not provide will use as default params in scripts
