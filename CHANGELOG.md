@@ -3,6 +3,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.INFO
 
+## [1.4.4] - 2025-05-06 - [PR #37](https://github.com/MeteoraAg/meteora-pool-setup/pull/37)
+### Added 
+- Function to create damm v2 customizable pool with single side liquidity.
+- Use `getDynamicFeeParams` to get dynamic fee params (Noted default max dynamic fee = 20% of base fee)
+- Use `getBaseFeeParams` to get base fee params. Included calculate params for fee scheduler.
+
 ## [1.4.3] - 2025-03-28 - [PR #28](https://github.com/MeteoraAg/meteora-pool-setup/pull/28)
 ### Added 
 - Update function to create DLMM pool with Token2022.
