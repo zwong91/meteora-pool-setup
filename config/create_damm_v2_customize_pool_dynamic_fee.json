@@ -1,28 +1,28 @@
 {
-    "rpcUrl": "https://api.mainnet-beta.solana.com",
+    "rpcUrl": "https://api.devnet.solana.com",
     "dryRun": true,
     "keypairFilePath": "id.json",
     "computeUnitPriceMicroLamports": 100000,
-    "baseMint": "6UP2q4xjkkxTbn4CHtFHh25f684n56eeDAhTgxajnhtH",
-    "quoteSymbol": "USDC",
+    "baseMint": "D1vjvCfzFATa7SQJenriTwYZYamaLL6vsasv2DabYxaz",
+    "quoteSymbol": "SOL",
     "dynamicAmmV2": {
         "creator": "4JTYKJAyS7eAXQRSxvMbmqgf6ajf3LR9JrAXpVEcww2q",
         "baseAmount": 1000,
         "initPrice": 10,
         "maxPrice": null,
         "poolFees": {
-            "initialBaseFeeBps": 25,
-            "finalBaseFeeBps": null,
+            "maxBaseFeeBps": 25,
+            "minBaseFeeBps": 25,
             "numberOfPeriod": 0,
-            "periodFrequency": 0,
+            "totalDuration": 0,
             "feeSchedulerMode": 0,
             "useDynamicFee": true,
             "dynamicFeeConfig": {
                 "filterPeriod": 10,
                 "decayPeriod": 120,
                 "reductionFactor": 5000,
-                "variableFeeControl": 2000000,
-                "maxVolatilityAccumulator": 100000
+                "variableFeeControl": 14460000,
+                "maxVolatilityAccumulator": 239
             }
         },
         "hasAlphaVault": false,

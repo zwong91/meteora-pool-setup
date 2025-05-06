@@ -18,23 +18,15 @@ import { Wallet, BN } from "@coral-xyz/anchor"
 import { getMint, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token"
 import {
 	BaseFee,
-	BASIS_POINT_MAX,
 	CpAmm,
-	estimateExponentialReductionFactor,
-	estimateLinearReductionFactor,
-	FEE_DENOMINATOR,
-	FeeSchedulerMode,
+	getDynamicFeeParams,
+	getBaseFeeParams,
 	getPriceFromSqrtPrice,
 	getSqrtPriceFromPrice,
 	MAX_SQRT_PRICE,
 	MIN_SQRT_PRICE,
 	PoolFeesParams
 } from "@meteora-ag/cp-amm-sdk"
-
-// convert to BPS
-function bpsToFeeNumerator(bps: number) {
-	return (bps * FEE_DENOMINATOR) / BASIS_POINT_MAX
-}
 
 export async function createDammV2CustomizablePool(
 	config: MeteoraConfig,
@@ -97,10 +89,10 @@ export async function createDammV2CustomizablePool(
 	} = config.dynamicAmmV2
 
 	const {
-		initialBaseFeeBps,
-		finalBaseFeeBps,
+		maxBaseFeeBps,
+		minBaseFeeBps,
 		feeSchedulerMode,
-		periodFrequency,
+		totalDuration,
 		numberOfPeriod,
 		useDynamicFee
 	} = poolFees
@@ -142,53 +134,39 @@ export async function createDammV2CustomizablePool(
 	)
 
 	const activationTypeValue = getDammV2ActivationType(activationType)
-	const dynamicFeeConfig = config.dynamicAmmV2.poolFees.dynamicFeeConfig
 
-	const dynamicFeeParams = {
-		binStep: 1,
-		binStepU128: new BN("1844674407370955"),
-		filterPeriod: dynamicFeeConfig ? dynamicFeeConfig.filterPeriod : 10,
-		decayPeriod: dynamicFeeConfig ? dynamicFeeConfig.decayPeriod : 120,
-		reductionFactor: dynamicFeeConfig ? dynamicFeeConfig.reductionFactor : 5000,
-		variableFeeControl: dynamicFeeConfig
-			? dynamicFeeConfig.variableFeeControl
-			: 2000000,
-		maxVolatilityAccumulator: dynamicFeeConfig
-			? dynamicFeeConfig.maxVolatilityAccumulator
-			: 100000
+	let dynamicFee = null
+	if (useDynamicFee) {
+		const dynamicFeeConfig = config.dynamicAmmV2.poolFees.dynamicFeeConfig
+		if (dynamicFeeConfig) {
+			dynamicFee = {
+				binStep: 1,
+				binStepU128: new BN("1844674407370955"),
+				filterPeriod: dynamicFeeConfig.filterPeriod,
+				decayPeriod: dynamicFeeConfig.decayPeriod,
+				reductionFactor: dynamicFeeConfig.reductionFactor,
+				variableFeeControl: dynamicFeeConfig.variableFeeControl,
+				maxVolatilityAccumulator: dynamicFeeConfig.maxVolatilityAccumulator
+			}
+		} else {
+			dynamicFee = getDynamicFeeParams(config.dynamicAmmV2.poolFees.minBaseFeeBps)
+		}
 	}
 
-	const feeNumerator = bpsToFeeNumerator(initialBaseFeeBps)
-
-	const reductionFactor =
-		periodFrequency <= 0
-			? 0
-			: feeSchedulerMode === FeeSchedulerMode.Linear
-				? estimateLinearReductionFactor(
-						initialBaseFeeBps,
-						finalBaseFeeBps,
-						numberOfPeriod
-					)
-				: estimateExponentialReductionFactor(
-						initialBaseFeeBps,
-						finalBaseFeeBps,
-						numberOfPeriod
-					)
-
-	const baseFee: BaseFee = {
-		cliffFeeNumerator: new BN(feeNumerator),
-		numberOfPeriod: numberOfPeriod,
-		periodFrequency: new BN(periodFrequency),
-		reductionFactor: new BN(reductionFactor),
-		feeSchedulerMode: feeSchedulerMode
-	}
+	const baseFee: BaseFee = getBaseFeeParams(
+		maxBaseFeeBps,
+		minBaseFeeBps,
+		feeSchedulerMode,
+		numberOfPeriod,
+		totalDuration
+	)
 
 	const poolFeesParams: PoolFeesParams = {
 		baseFee,
 		protocolFeePercent: 20,
 		partnerFeePercent: 0,
 		referralFeePercent: 20,
-		dynamicFee: useDynamicFee ? dynamicFeeParams : null
+		dynamicFee
 	}
 	const positionNft = Keypair.generate()
 

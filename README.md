@@ -65,10 +65,10 @@ Also we need to provide the keypair for the payer wallet in `keypair.json` file.
 - `initPrice`: Initial price for the pool (min price in price range)
 - `maxPrice`: Max price range setup (null to use default)
 - `poolFees`:
-    - `initialBaseFeeBps`: Starting fee in basis points (e.g., 25 = 0.25%). It is base fee if scheduler is not set.
-    - `finalBaseFeeBps`: Target fee after reduction periods. Should be null when fee scheduler is not used.
+    - `maxBaseFeeBps`: Starting fee in basis points (e.g., 25 = 0.25%). It is base fee if scheduler is not set.
+    - `minBaseFeeBps`: Target fee after reduction periods. Should be equal `maxBaseFeeBps` when fee scheduler is not used.
     - `numberOfPeriod`: Number of periods for fee reduction schedule
-    - `periodFrequency`: Frequency of each period (in slots or seconds based on activation type). if `periodFrequency == 0` the `FeeScheduler` will not be set up.
+    - `periodFrequency`: Total duration of the fee schedule (in slots or seconds based on activation type). `totalDuration == 0` if the `FeeScheduler` not be set up.
     - `feeSchedulerMode`: Fee scheduler mode (0 = linear, 1 = exponential)
     - `useDynamicFee`: Whether to use dynamic fee calculation based on price volatility (true/false)
     - `dynamicFeeConfig`: Configuration when useDynamicFee is true if not provide will use as default params in scripts
