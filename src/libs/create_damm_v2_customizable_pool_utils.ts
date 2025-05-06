@@ -25,7 +25,9 @@ import {
 	getSqrtPriceFromPrice,
 	MAX_SQRT_PRICE,
 	MIN_SQRT_PRICE,
-	PoolFeesParams
+	PoolFeesParams,
+	BIN_STEP_BPS_DEFAULT,
+	BIN_STEP_BPS_U128_DEFAULT
 } from "@meteora-ag/cp-amm-sdk"
 
 export async function createDammV2CustomizablePool(
@@ -140,8 +142,8 @@ export async function createDammV2CustomizablePool(
 		const dynamicFeeConfig = config.dynamicAmmV2.poolFees.dynamicFeeConfig
 		if (dynamicFeeConfig) {
 			dynamicFee = {
-				binStep: 1,
-				binStepU128: new BN("1844674407370955"),
+				binStep: BIN_STEP_BPS_DEFAULT,
+				binStepU128: BIN_STEP_BPS_U128_DEFAULT,
 				filterPeriod: dynamicFeeConfig.filterPeriod,
 				decayPeriod: dynamicFeeConfig.decayPeriod,
 				reductionFactor: dynamicFeeConfig.reductionFactor,
