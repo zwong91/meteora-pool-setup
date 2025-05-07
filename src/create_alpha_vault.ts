@@ -1,9 +1,4 @@
-import {
-	Connection,
-	PublicKey,
-	Transaction,
-	sendAndConfirmTransaction
-} from "@solana/web3.js"
+import { Connection, PublicKey } from "@solana/web3.js"
 import {
 	DEFAULT_COMMITMENT_LEVEL,
 	MeteoraConfig,
@@ -11,13 +6,9 @@ import {
 	getQuoteMint,
 	getQuoteDecimals,
 	safeParseKeypairFromFile,
-	runSimulateTransaction,
 	FcfsAlphaVaultConfig,
 	ProrataAlphaVaultConfig,
-	getAlphaVaultWhitelistMode,
 	parseConfigFromCli,
-	getAlphaVaultPoolType,
-	modifyComputeUnitPriceIx,
 	AlphaVaultTypeConfig,
 	PoolTypeConfig,
 	toAlphaVaulSdkPoolType,
@@ -26,8 +17,7 @@ import {
 } from "."
 import { AnchorProvider, Wallet } from "@coral-xyz/anchor"
 
-import { BN } from "bn.js"
-import AlphaVault, { PoolType, WalletDepositCap } from "@meteora-ag/alpha-vault"
+import { WalletDepositCap } from "@meteora-ag/alpha-vault"
 import {
 	LBCLMM_PROGRAM_IDS,
 	deriveCustomizablePermissionlessLbPair
@@ -39,8 +29,14 @@ import {
 import {
 	createFcfsAlphaVault,
 	createPermissionedAlphaVaultWithAuthority,
+	createPermissionedAlphaVaultWithMerkleProof,
 	createProrataAlphaVault
 } from "./libs/create_alpha_vault_utils"
+
+interface WhitelistCsv {
+	address: string
+	maxAmount: string
+}
 
 async function main() {
 	let config: MeteoraConfig = parseConfigFromCli()
@@ -55,9 +51,6 @@ async function main() {
 
 	const connection = new Connection(config.rpcUrl, DEFAULT_COMMITMENT_LEVEL)
 	const wallet = new Wallet(keypair)
-	const provider = new AnchorProvider(connection, wallet, {
-		commitment: connection.commitment
-	})
 
 	if (!config.baseMint) {
 		throw new Error("Missing baseMint in configuration")
@@ -105,10 +98,6 @@ async function main() {
 			throw new Error("Missing whitelist filepath in configuration")
 		}
 
-		interface WhitelistCsv {
-			address: string
-			maxAmount: string
-		}
 		const whitelistListCsv: Array<WhitelistCsv> = await parseCsv(
 			config.alphaVault.whitelistFilepath
 		)
@@ -165,6 +154,40 @@ async function main() {
 		} else {
 			throw new Error(`Invalid alpha vault type ${config.alphaVault.alphaVaultType}`)
 		}
+	} else if (
+		config.alphaVault.whitelistMode ==
+		WhitelistModeConfig.PermissionedWithMerkleProof
+	) {
+		if (!config.alphaVault.whitelistFilepath) {
+			throw new Error("Missing whitelist filepath in configuration")
+		}
+
+		const whitelistListCsv: Array<WhitelistCsv> = await parseCsv(
+			config.alphaVault.whitelistFilepath
+		)
+
+		const whitelistList: Array<WalletDepositCap> = new Array(0)
+		for (const item of whitelistListCsv) {
+			whitelistList.push({
+				address: new PublicKey(item.address),
+				maxAmount: getAmountInLamports(item.maxAmount, quoteDecimals)
+			})
+		}
+
+		await createPermissionedAlphaVaultWithMerkleProof(
+			connection,
+			wallet,
+			config.alphaVault.alphaVaultType,
+			toAlphaVaulSdkPoolType(poolType),
+			poolKey,
+			baseMint,
+			quoteMint,
+			quoteDecimals,
+			config.alphaVault,
+			whitelistList,
+			config.dryRun,
+			config.computeUnitPriceMicroLamports
+		)
 	}
 }
 

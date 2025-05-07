@@ -18,6 +18,7 @@ import {
 } from "@solana/web3.js"
 import {
 	ALPHA_VAULT_PROGRAM_IDS,
+	DEFAULT_NODES_PER_TREE,
 	DEFAULT_SEND_TX_MAX_RETRIES,
 	MAX_INSTRUCTIONS_PER_STAKE_ESCROW_ACCOUNTS_CREATED
 } from "./constants"
@@ -36,6 +37,8 @@ import {
 	WhitelistModeConfig
 } from "./config"
 import { BN } from "bn.js"
+import { BalanceTree } from "./merkle_tree"
+import fs from "fs"
 
 export async function createFcfsAlphaVault(
 	connection: Connection,
@@ -245,6 +248,187 @@ export async function createProrataAlphaVault(
 	}
 }
 
+export async function createPermissionedAlphaVaultWithMerkleProof(
+	connection: Connection,
+	wallet: Wallet,
+	alphaVaultType: AlphaVaultTypeConfig,
+	poolType: PoolType,
+	poolAddress: PublicKey,
+	baseMint: PublicKey,
+	quoteMint: PublicKey,
+	quoteDecimals: number,
+	params: FcfsAlphaVaultConfig | ProrataAlphaVaultConfig,
+	whitelistList: WalletDepositCap[],
+	dryRun: boolean,
+	computeUnitPriceMicroLamports: number,
+	opts?: {
+		alphaVaultProgramId: PublicKey
+	}
+): Promise<void> {
+	if (params.whitelistMode != WhitelistModeConfig.PermissionedWithAuthority) {
+		throw new Error(`Invalid whitelist mode ${params.whitelistMode}. Only Permissioned with authority is allowed 
+    `)
+	}
+	const alphaVaultProgramId = new PublicKey(
+		opts?.alphaVaultProgramId ?? ALPHA_VAULT_PROGRAM_IDS["mainnet-beta"]
+	)
+
+	const [alphaVaultPubkey] = deriveAlphaVault(
+		wallet.publicKey,
+		poolAddress,
+		alphaVaultProgramId
+	)
+
+	const alphaVaultAccountInfo = await connection.getAccountInfo(
+		alphaVaultPubkey,
+		connection.commitment
+	)
+	if (!alphaVaultAccountInfo) {
+		// 1. Create alpha vault
+		if (alphaVaultType == AlphaVaultTypeConfig.Fcfs) {
+			await createFcfsAlphaVault(
+				connection,
+				wallet,
+				poolType,
+				poolAddress,
+				baseMint,
+				quoteMint,
+				quoteDecimals,
+				params as FcfsAlphaVaultConfig,
+				dryRun,
+				computeUnitPriceMicroLamports,
+				opts
+			)
+		} else if (alphaVaultType == AlphaVaultTypeConfig.Prorata) {
+			await createProrataAlphaVault(
+				connection,
+				wallet,
+				poolType,
+				poolAddress,
+				baseMint,
+				quoteMint,
+				quoteDecimals,
+				params as ProrataAlphaVaultConfig,
+				dryRun,
+				computeUnitPriceMicroLamports,
+				opts
+			)
+		}
+	} else {
+		console.log(`> Alpha vault already exists at ${alphaVaultPubkey}`)
+	}
+
+	// 2. Create merkle root config
+	console.log("Creating merkle root configs...")
+
+	const chunkSize = params.chunkSize ?? DEFAULT_NODES_PER_TREE
+	console.log(`Using chunk size of ${chunkSize}`)
+
+	const kvProofFolderPath =
+		params.kvProofFilepath ?? `./${alphaVaultPubkey.toBase58()}`
+
+	console.log(`Using kv proof filepath ${kvProofFolderPath}`)
+
+	const alphaVault = await createAlphaVaultInstance(
+		connection,
+		alphaVaultProgramId,
+		alphaVaultPubkey
+	)
+
+	const chunkCount = Math.floor(whitelistList.length / chunkSize + 1)
+
+	console.log(`Total number of tree ${chunkCount}`)
+
+	for (let i = 0; i < chunkCount; i++) {
+		console.log(`Tree version ${i + 1}`)
+		const version = new BN(i)
+
+		const [merkleRootConfig] = deriveMerkleRootConfig(
+			alphaVaultPubkey,
+			version,
+			alphaVaultProgramId
+		)
+
+		const merkleRootConfigAccount = await connection.getAccountInfo(merkleRootConfig)
+		if (merkleRootConfigAccount != null) {
+			console.log(
+				">>> Merkle root config is already existed. Skip creating new merkle root config."
+			)
+			continue
+		}
+
+		const offset = i * chunkSize
+		const endOffset = Math.min(offset + chunkSize, whitelistList.length)
+		const chunkedWhitelistList = whitelistList.slice(offset, endOffset)
+
+		const tree = createMerkleTree(chunkedWhitelistList)
+		const root = tree.getRoot()
+
+		const tx = await alphaVault.createMerkleRootConfig(
+			root,
+			version,
+			wallet.publicKey
+		)
+
+		const { lastValidBlockHeight, blockhash } = await connection.getLatestBlockhash()
+		const initMerkleRootConfigTx = new Transaction({
+			lastValidBlockHeight,
+			blockhash
+		}).add(...tx.instructions)
+
+		modifyComputeUnitPriceIx(initMerkleRootConfigTx, computeUnitPriceMicroLamports)
+
+		if (dryRun) {
+			console.log(`\n> Simulating init merkle root config tx...`)
+			await runSimulateTransaction(connection, [wallet.payer], wallet.publicKey, [
+				initMerkleRootConfigTx
+			])
+		} else {
+			console.log(`>> Sending init merkle root config transaction...`)
+			const initAlphaVaulTxHash = await sendAndConfirmTransaction(
+				connection,
+				initMerkleRootConfigTx,
+				[wallet.payer],
+				{
+					commitment: connection.commitment,
+					maxRetries: DEFAULT_SEND_TX_MAX_RETRIES
+				}
+			).catch((err) => {
+				console.error(err)
+				throw err
+			})
+			console.log(
+				`>>> Merkle root config version ${i + 1} successfully with tx hash: ${initAlphaVaulTxHash}`
+			)
+		}
+
+		interface KvMerkleProof {
+			[key: string]: {
+				merkle_root_config: String
+				max_cap: number
+				proof: number[][]
+			}
+		}
+
+		const kvProofs: KvMerkleProof = {}
+		const kvProofFilePath = `${kvProofFolderPath}/${i + 1}.json`
+
+		for (const wallet of chunkedWhitelistList) {
+			const proof = tree.getProof(wallet.address, wallet.maxAmount)
+			kvProofs[wallet.address.toBase58()] = {
+				merkle_root_config: merkleRootConfig.toBase58(),
+				max_cap: wallet.maxAmount.toNumber(),
+				proof: proof.map((buffer) => {
+					return Array.from(new Uint8Array(buffer))
+				})
+			}
+		}
+
+		console.log(`Writing kv proof to ${kvProofFilePath}`)
+		fs.writeFileSync(kvProofFilePath, JSON.stringify(kvProofs), "utf-8")
+	}
+}
+
 export async function createPermissionedAlphaVaultWithAuthority(
 	connection: Connection,
 	wallet: Wallet,
@@ -373,34 +557,29 @@ export async function createAlphaVaultInstance(
 }
 
 export function deriveMerkleRootConfig(
-  alphaVault: PublicKey,
-  version: BN,
-  programId: PublicKey,
+	alphaVault: PublicKey,
+	version: BN,
+	programId: PublicKey
 ) {
-  return PublicKey.findProgramAddressSync(
-    [
-      Buffer.from(SEED.merkleRoot),
-      alphaVault.toBuffer(),
-      new Uint8Array(version.toArrayLike(Buffer, "le", 8)),
-    ],
-    programId,
-  );
+	return PublicKey.findProgramAddressSync(
+		[
+			Buffer.from(SEED.merkleRoot),
+			alphaVault.toBuffer(),
+			new Uint8Array(version.toArrayLike(Buffer, "le", 8))
+		],
+		programId
+	)
 }
 
-export async function createAlphaVaultInstance(
-  connection: Connection,
-  alphaVaultProgramId: PublicKey,
-  vaultAddress: PublicKey,
-): Promise<AlphaVault> {
-  const provider = new AnchorProvider(
-    connection,
-    {} as any,
-    AnchorProvider.defaultOptions(),
-  );
-  const program = new Program(IDL, alphaVaultProgramId, provider);
+export function createMerkleTree(walletDepositCap: WalletDepositCap[]) {
+	const tree = new BalanceTree(
+		walletDepositCap.map((info) => {
+			return {
+				account: info.address,
+				maxCap: info.maxAmount
+			}
+		})
+	)
 
-  const vault = await program.account.vault.fetch(vaultAddress);
-  const vaultMode = vault.vaultMode === 0 ? VaultMode.PRORATA : VaultMode.FCFS;
-
-  return new AlphaVault(program, vaultAddress, vault, vaultMode);
+	return tree
 }

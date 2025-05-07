@@ -222,7 +222,9 @@ const CONFIG_SCHEMA: JSONSchemaType<MeteoraConfig> = {
 						"permissioned_with_authority"
 					]
 				},
-				whitelistFilepath: { type: "string", nullable: true }
+				whitelistFilepath: { type: "string", nullable: true },
+				chunkSize: { type: "number", nullable: true },
+				kvProofFilepath: { type: "string", nullable: true }
 			},
 			required: [
 				"poolType",
@@ -442,6 +444,8 @@ export interface FcfsAlphaVaultConfig {
 	// whitelist mode: permissionless / permission_with_merkle_proof / permission_with_authority
 	whitelistMode: WhitelistModeConfig
 	whitelistFilepath?: string
+	chunkSize?: number
+	kvProofFilepath?: string
 }
 
 export interface ProrataAlphaVaultConfig {
@@ -460,6 +464,8 @@ export interface ProrataAlphaVaultConfig {
 	// whitelist mode: permissionless / permission_with_merkle_proof / permission_with_authority
 	whitelistMode: WhitelistModeConfig
 	whitelistFilepath?: string
+	chunkSize?: number
+	kvProofFilepath?: string
 }
 
 export interface LockLiquidityConfig {
