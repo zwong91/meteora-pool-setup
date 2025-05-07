@@ -20,6 +20,10 @@ import {
 	Transaction
 } from "@solana/web3.js"
 import { BN } from "bn.js"
+import {
+	DEFAULT_COMMITMENT_LEVEL,
+	DEFAULT_SEND_TX_MAX_RETRIES
+} from "../libs/constants"
 
 export const wrapSol = async (connection: Connection, amount: BN, user: Keypair) => {
 	const userAta = getAssociatedTokenAccount(NATIVE_MINT, user.publicKey)
@@ -28,14 +32,17 @@ export const wrapSol = async (connection: Connection, amount: BN, user: Keypair)
 		userAta,
 		BigInt(amount.toString())
 	)
-	const latestBlockHash = await connection.getLatestBlockhash()
+	const latestBlockHash = await connection.getLatestBlockhash(connection.commitment)
 	const tx = new Transaction({
 		feePayer: user.publicKey,
 		...latestBlockHash
 	}).add(...wrapSolIx)
 	tx.sign(user)
-	const txHash = await connection.sendRawTransaction(tx.serialize())
-	await connection.confirmTransaction(txHash, "finalized")
+	const txHash = await sendAndConfirmTransaction(connection, tx, [user], {
+		commitment: connection.commitment,
+		maxRetries: DEFAULT_SEND_TX_MAX_RETRIES
+	})
+	return txHash
 }
 
 export const airDropSol = async (
@@ -48,7 +55,9 @@ export const airDropSol = async (
 			publicKey,
 			amount * LAMPORTS_PER_SOL
 		)
-		const latestBlockHash = await connection.getLatestBlockhash()
+		const latestBlockHash = await connection.getLatestBlockhash(
+			connection.commitment
+		)
 		await connection.confirmTransaction(
 			{
 				blockhash: latestBlockHash.blockhash,
@@ -103,7 +112,8 @@ export async function createToken2022(
 	)
 
 	await sendAndConfirmTransaction(connection, transaction, [payer, mintKeypair], {
-		commitment: "confirmed"
+		commitment: connection.commitment,
+		maxRetries: DEFAULT_SEND_TX_MAX_RETRIES
 	})
 
 	return mintKeypair.publicKey
@@ -140,6 +150,7 @@ export async function mintToToken2022(
 	transaction.add(mintIx)
 
 	await sendAndConfirmTransaction(connection, transaction, [payer, mintAuthority], {
-		commitment: "confirmed"
+		commitment: connection.commitment,
+		maxRetries: DEFAULT_SEND_TX_MAX_RETRIES
 	})
 }

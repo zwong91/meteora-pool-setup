@@ -13,7 +13,9 @@ import {
 	getDlmmActivationType,
 	modifyComputeUnitPriceIx,
 	DLMM_PROGRAM_IDS,
-	isPriceRoundingUp
+	isPriceRoundingUp,
+	DEFAULT_SEND_TX_MAX_RETRIES,
+	DEFAULT_COMMITMENT_LEVEL
 } from "../"
 import { AmmImpl } from "@mercurial-finance/dynamic-amm-sdk"
 import { Wallet } from "@coral-xyz/anchor"
@@ -47,7 +49,7 @@ export async function createPermissionlessDynamicPool(
 		config.quoteSymbol,
 		config.quoteMint
 	)
-	const baseMintAccount = await getMint(connection, baseMint)
+	const baseMintAccount = await getMint(connection, baseMint, connection.commitment)
 	const baseDecimals = baseMintAccount.decimals
 
 	const baseAmount = getAmountInLamports(config.dynamicAmm.baseAmount, baseDecimals)
@@ -111,9 +113,15 @@ export async function createPermissionlessDynamicPool(
 		])
 	} else {
 		console.log(`>> Sending init pool transaction...`)
-		const initPoolTxHash = await sendAndConfirmTransaction(connection, initPoolTx, [
-			wallet.payer
-		]).catch((err) => {
+		const initPoolTxHash = await sendAndConfirmTransaction(
+			connection,
+			initPoolTx,
+			[wallet.payer],
+			{
+				commitment: connection.commitment,
+				maxRetries: DEFAULT_SEND_TX_MAX_RETRIES
+			}
+		).catch((err) => {
 			console.error(err)
 			throw err
 		})
@@ -159,7 +167,10 @@ export async function createPermissionlessDlmmPool(
 		config.quoteSymbol,
 		config.quoteMint
 	)
-	const baseMintInfo = await connection.getAccountInfo(baseMint)
+	const baseMintInfo = await connection.getAccountInfo(
+		baseMint,
+		connection.commitment
+	)
 	const baseMintAccount = await getMint(
 		connection,
 		baseMint,
@@ -218,9 +229,15 @@ export async function createPermissionlessDlmmPool(
 		])
 	} else {
 		console.log(`>> Sending init pool transaction...`)
-		let initPoolTxHash = await sendAndConfirmTransaction(connection, initPoolTx, [
-			wallet.payer
-		]).catch((e) => {
+		let initPoolTxHash = await sendAndConfirmTransaction(
+			connection,
+			initPoolTx,
+			[wallet.payer],
+			{
+				commitment: connection.commitment,
+				maxRetries: DEFAULT_SEND_TX_MAX_RETRIES
+			}
+		).catch((e) => {
 			console.error(e)
 			throw e
 		})

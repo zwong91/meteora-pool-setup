@@ -23,7 +23,7 @@ import {
 	DEFAULT_ADD_LIQUIDITY_CU,
 	seedLiquidityLfg
 } from "."
-import { AnchorProvider, Wallet } from "@coral-xyz/anchor"
+import { Wallet } from "@coral-xyz/anchor"
 import { BN } from "bn.js"
 import DLMM, {
 	CompressedBinDepositAmounts,
@@ -61,16 +61,13 @@ async function main() {
 
 	const connection = new Connection(config.rpcUrl, DEFAULT_COMMITMENT_LEVEL)
 	const wallet = new Wallet(keypair)
-	const provider = new AnchorProvider(connection, wallet, {
-		commitment: connection.commitment
-	})
 	const DLMM_PROGRAM_ID = new PublicKey(LBCLMM_PROGRAM_IDS["mainnet-beta"])
 
 	if (!config.baseMint) {
 		throw new Error("Missing baseMint in configuration")
 	}
 	const baseMint = new PublicKey(config.baseMint)
-	const baseMintAccount = await getMint(connection, baseMint)
+	const baseMintAccount = await getMint(connection, baseMint, connection.commitment)
 	const baseDecimals = baseMintAccount.decimals
 
 	let quoteMint = getQuoteMint(config.quoteSymbol, config.quoteMint)
