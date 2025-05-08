@@ -39,6 +39,7 @@ import {
 import {
 	createFcfsAlphaVault,
 	createPermissionedAlphaVaultWithAuthority,
+	createPermissionedAlphaVaultWithMerkleProof,
 	createProrataAlphaVault
 } from "./libs/create_alpha_vault_utils"
 
@@ -165,6 +166,44 @@ async function main() {
 		} else {
 			throw new Error(`Invalid alpha vault type ${config.alphaVault.alphaVaultType}`)
 		}
+	} else if (
+		config.alphaVault.whitelistMode ==
+		WhitelistModeConfig.PermissionedWithMerkleProof
+	) {
+		if (!config.alphaVault.whitelistFilepath) {
+			throw new Error("Missing whitelist filepath in configuration")
+		}
+
+		interface WhitelistCsv {
+			address: string
+			maxAmount: string
+		}
+		const whitelistListCsv: Array<WhitelistCsv> = await parseCsv(
+			config.alphaVault.whitelistFilepath
+		)
+
+		const whitelistList: Array<WalletDepositCap> = new Array(0)
+		for (const item of whitelistListCsv) {
+			whitelistList.push({
+				address: new PublicKey(item.address),
+				maxAmount: getAmountInLamports(item.maxAmount, quoteDecimals)
+			})
+		}
+
+		await createPermissionedAlphaVaultWithMerkleProof(
+			connection,
+			wallet,
+			config.alphaVault.alphaVaultType,
+			toAlphaVaulSdkPoolType(poolType),
+			poolKey,
+			baseMint,
+			quoteMint,
+			quoteDecimals,
+			config.alphaVault,
+			whitelistList,
+			config.dryRun,
+			config.computeUnitPriceMicroLamports
+		)
 	}
 }
 
