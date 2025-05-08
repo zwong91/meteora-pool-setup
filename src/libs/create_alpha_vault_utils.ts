@@ -265,8 +265,8 @@ export async function createPermissionedAlphaVaultWithMerkleProof(
 		alphaVaultProgramId: PublicKey
 	}
 ): Promise<void> {
-	if (params.whitelistMode != WhitelistModeConfig.PermissionedWithAuthority) {
-		throw new Error(`Invalid whitelist mode ${params.whitelistMode}. Only Permissioned with authority is allowed 
+	if (params.whitelistMode != WhitelistModeConfig.PermissionedWithMerkleProof) {
+		throw new Error(`Invalid whitelist mode ${params.whitelistMode}. Only Permissioned with merkle proof is allowed 
     `)
 	}
 	const alphaVaultProgramId = new PublicKey(
