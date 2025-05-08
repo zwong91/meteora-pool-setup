@@ -322,12 +322,12 @@ export async function createPermissionedAlphaVaultWithMerkleProof(
 	console.log("Creating merkle root configs...")
 
 	const chunkSize = params.chunkSize ?? DEFAULT_NODES_PER_TREE
-	console.log(`Using chunk size of ${chunkSize}`)
+	console.log(`- Using chunk size of ${chunkSize}`)
 
 	const kvProofFolderPath =
 		params.kvProofFilepath ?? `./${alphaVaultPubkey.toBase58()}`
 
-	console.log(`Using kv proof filepath ${kvProofFolderPath}`)
+	console.log(`- Using kv proof filepath ${kvProofFolderPath}`)
 
 	const alphaVault = await createAlphaVaultInstance(
 		connection,
@@ -335,12 +335,15 @@ export async function createPermissionedAlphaVaultWithMerkleProof(
 		alphaVaultPubkey
 	)
 
-	const chunkCount = Math.floor(whitelistList.length / chunkSize + 1)
+	let chunkCount = Math.floor(whitelistList.length / chunkSize)
+	if (whitelistList.length % chunkSize != 0) {
+		chunkCount++
+	}
 
-	console.log(`Total number of tree ${chunkCount}`)
+	console.log(`- Total number of tree ${chunkCount}`)
 
 	for (let i = 0; i < chunkCount; i++) {
-		console.log(`Tree version ${i + 1}`)
+		console.log(`- Tree version ${i}`)
 		const version = new BN(i)
 
 		const [merkleRootConfig] = deriveMerkleRootConfig(
@@ -349,6 +352,41 @@ export async function createPermissionedAlphaVaultWithMerkleProof(
 			alphaVaultProgramId
 		)
 
+		const offset = i * chunkSize
+		const endOffset = Math.min(offset + chunkSize, whitelistList.length)
+		const chunkedWhitelistList = whitelistList.slice(offset, endOffset)
+
+		const tree = createMerkleTree(chunkedWhitelistList)
+		const root = tree.getRoot()
+
+		interface KvMerkleProof {
+			[key: string]: {
+				merkle_root_config: String
+				max_cap: number
+				proof: number[][]
+			}
+		}
+
+		const kvProofs: KvMerkleProof = {}
+		const kvProofFilePath = `${kvProofFolderPath}/${i}.json`
+
+		for (const wallet of chunkedWhitelistList) {
+			const proof = tree.getProof(wallet.address, wallet.maxAmount)
+			kvProofs[wallet.address.toBase58()] = {
+				merkle_root_config: merkleRootConfig.toBase58(),
+				max_cap: wallet.maxAmount.toNumber(),
+				proof: proof.map((buffer) => {
+					return Array.from(new Uint8Array(buffer))
+				})
+			}
+		}
+
+		console.log(`- Writing kv proof to ${kvProofFilePath}`)
+		fs.mkdirSync(kvProofFolderPath, { recursive: true })
+		fs.writeFileSync(kvProofFilePath, JSON.stringify(kvProofs), {
+			encoding: "utf-8"
+		})
+
 		const merkleRootConfigAccount = await connection.getAccountInfo(merkleRootConfig)
 		if (merkleRootConfigAccount != null) {
 			console.log(
@@ -356,13 +394,6 @@ export async function createPermissionedAlphaVaultWithMerkleProof(
 			)
 			continue
 		}
-
-		const offset = i * chunkSize
-		const endOffset = Math.min(offset + chunkSize, whitelistList.length)
-		const chunkedWhitelistList = whitelistList.slice(offset, endOffset)
-
-		const tree = createMerkleTree(chunkedWhitelistList)
-		const root = tree.getRoot()
 
 		const tx = await alphaVault.createMerkleRootConfig(
 			root,
@@ -401,31 +432,6 @@ export async function createPermissionedAlphaVaultWithMerkleProof(
 				`>>> Merkle root config version ${i + 1} successfully with tx hash: ${initAlphaVaulTxHash}`
 			)
 		}
-
-		interface KvMerkleProof {
-			[key: string]: {
-				merkle_root_config: String
-				max_cap: number
-				proof: number[][]
-			}
-		}
-
-		const kvProofs: KvMerkleProof = {}
-		const kvProofFilePath = `${kvProofFolderPath}/${i + 1}.json`
-
-		for (const wallet of chunkedWhitelistList) {
-			const proof = tree.getProof(wallet.address, wallet.maxAmount)
-			kvProofs[wallet.address.toBase58()] = {
-				merkle_root_config: merkleRootConfig.toBase58(),
-				max_cap: wallet.maxAmount.toNumber(),
-				proof: proof.map((buffer) => {
-					return Array.from(new Uint8Array(buffer))
-				})
-			}
-		}
-
-		console.log(`Writing kv proof to ${kvProofFilePath}`)
-		fs.writeFileSync(kvProofFilePath, JSON.stringify(kvProofs), "utf-8")
 	}
 }
 
