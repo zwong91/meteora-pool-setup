@@ -89,10 +89,13 @@ const CONFIG_SCHEMA: JSONSchemaType<MeteoraConfig> = {
 					nullable: false
 				},
 				baseAmount: {
+					anyOf: [{ type: "number" }, { type: "string" }]
+				},
+				quoteAmount: {
 					anyOf: [{ type: "number" }, { type: "string" }, { type: "null" }]
 				},
 				initPrice: {
-					anyOf: [{ type: "number" }, { type: "string" }, { type: "null" }]
+					anyOf: [{ type: "number" }, { type: "string" }]
 				},
 				maxPrice: {
 					anyOf: [{ type: "number" }, { type: "string" }, { type: "null" }]
@@ -389,7 +392,8 @@ export interface DynamicAmmConfig {
 export interface DynamicAmmV2Config {
 	creator: string
 	baseAmount: number | string
-	initPrice: number | string | null
+	quoteAmount: number | string | null
+	initPrice: number | string
 	maxPrice: number | string | null
 	poolFees: {
 		maxBaseFeeBps: number
