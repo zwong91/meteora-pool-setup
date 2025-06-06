@@ -1,5 +1,5 @@
 {
-  "rpcUrl": "https://api.mainnet-beta.solana.com",
+  "rpcUrl": "https://api.testnet.solana.com",
   "dryRun": true,
   "keypairFilePath": "keypair.json",
   "computeUnitPriceMicroLamports": 100000,
