@@ -236,8 +236,6 @@ Farming Rewards 挖矿奖励一旦您在覆盖**活动区间**的价格范围内
 
 create a farm 申请
 
-
-
 DLMM Launch Pool 为新代币发行设计的池类型。
 https://docs.meteora.ag/token-launch-pools/steps-to-create-a-pool-for-a-token-launch/create-dlmm-launch-pool
 

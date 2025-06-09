@@ -153,6 +153,18 @@ Then run the test: `bun test`
 
 ## Run the scripts
 Run the script with config file specified in the CLI, some examples:
+```bash
+# base mint address
+spl-token create-token --url devnet
+solana account 87cQhtc3bugmUC16WHicyyg3sAZm6fJbGqm6SUJNz5A1 --url devnet
+# 创建关联代币账户
+spl-token create-account 87cQhtc3bugmUC16WHicyyg3sAZm6fJbGqm6SUJNz5A1 --url devnet
+# 如果您是这个代币的铸造权限所有者，可以铸造一些代币进行测试
+spl-token mint 87cQhtc3bugmUC16WHicyyg3sAZm6fJbGqm6SUJNz5A1 1000 --url devnet
+# 查看您的代币余额
+spl-token accounts --url devnet
+
+```
 
 **Create dynamic AMM pool**
 ```bash
