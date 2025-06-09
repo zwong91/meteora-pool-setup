@@ -1,0 +1,9 @@
+{
+    "servers": {
+        "solanaMcp": {
+            "type": "sse",
+            "command": "npx",
+            "args": ["mcp-remote", "https://mcp.solana.com/mcp"]
+        }
+    }
+}

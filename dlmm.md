@@ -261,3 +261,24 @@ binArray 程序账户 租金不可退还
 
 Smart contract risk 智能合约风险
 Risk of a stablecoin depeg稳定币脱钩的风险
+
+
+account vehicle purchase slush home lyrics liar dust curtain replace hip isolate
+
+
+DLMM SDK on github: https://github.com/MeteoraAg/dlmm-sdk
+DLMM API endpoints: https://dlmm-api.meteora.ag/swagger-ui/#/
+Devnet: https://devnet.meteora.ag/
+
+ Meteora 上初始化和种子一个 DLMM 流动性池，使用可自定义的无权限流动性箱对（LB 对）
+
+创建 DLMM 池的三个钱包
+* Position Owner 头寸所有者拥有流动性的钱包
+* Operator 拥有者存入和提取代币的钱包
+* Fee Owner 获得费用的钱包
+
+提供流动性
+1.  ilm 曲线分布策略 LFG
+https://ilm.jup.ag/
+
+2. single bin strategy 单一币种策略所有流动性都分配到一个单一的池中

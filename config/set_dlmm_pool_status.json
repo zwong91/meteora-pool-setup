@@ -1,10 +1,10 @@
 {
-  "rpcUrl": "https://api.mainnet-beta.solana.com",
-  "dryRun": true,
+  "rpcUrl": "https://api.devnet.solana.com",
+  "dryRun": false,
   "keypairFilePath": "keypair.json",
   "computeUnitPriceMicroLamports": 100000,
   "setDlmmPoolStatus": {
-    "poolAddress": "9d9mb8kooFfaD3SctgZtkxQypkshx6ezhbKio89ixyy2",
+    "poolAddress": "6u5kVXU2cP9oXxXE5hX6vbfta2CnUAbuq1Y5wWKgzyMm",
     "enabled": true
   }
 }
