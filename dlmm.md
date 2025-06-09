@@ -1,4 +1,11 @@
 Meteora DLMM  所有流动性仅用于交易， 没有借贷收益。
+> 核心特征：
+* Bin-based 流动性架构 - 离散价格区间
+* 动态费用机制 - base fee + variable fee
+* 波动性累积器 - 计算可变费用
+* 零滑点区间 - 每个活跃区间内
+* 流动性形状策略 - Spot, Curve, Bid-ask
+* 跨合约调用, pancake
 
 Dynamic Liquidity Market Maker (DLMM) 动态流动性做市商 ， 让流动性提供者 (LPs) 尽可能多地利用其资本赚取费用。
 
@@ -253,9 +260,10 @@ DLMM API endpoints: https://dlmm-api.meteora.ag/swagger-ui/#/
 
 Devnet: https://devnet.meteora.ag/
 
+https://devnet.meteora.ag/dlmm/6u5kVXU2cP9oXxXE5hX6vbfta2CnUAbuq1Y5wWKgzyMm
 
 
-binArray 程序账户 租金不可退还
+binArray 程序账户 租金不可退还*
 
 
 
